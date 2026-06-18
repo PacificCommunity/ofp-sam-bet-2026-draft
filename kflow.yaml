@@ -1,0 +1,20 @@
+name: ofp-sam-bet-2026-report
+description: Render the BET 2026 assessment report from generated plot outputs.
+command: bash run.sh
+docker_image: ghcr.io/pacificcommunity/tuna-flow:v1.5
+resources:
+  cpus: 2
+  memory: 12GB
+  disk: 8GB
+output_patterns:
+  - outputs/**
+job_config:
+  optional:
+    - RUN_LABEL
+    - JOB_TITLE
+    - FLOW_GROUP
+    - FLOW_SPECIES
+    - FLOW_SPECIES_LABEL
+    - FLOW_ASSESSMENT_YEAR
+    - REPORT_QMD
+    - KFLOW_RUNTIME_PACKAGES

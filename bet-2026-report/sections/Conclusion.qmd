@@ -1,0 +1,24 @@
+---
+bibliography: ../references.bib
+---
+
+# Conclusions
+
+The final assessment conclusions for the `r species_label` stock should reflect
+the selected `r assessment_year` model set, its diagnostics, and the agreed
+uncertainty treatment.
+
+Until the final `r assessment_year` model set is accepted, the
+`r previous_assessment_year` conclusions should be used only as comparison
+anchors. That assessment concluded that spawning potential declined until
+around 2010 and was then more stable, that juvenile fishing mortality was
+higher than adult fishing mortality, that median recent depletion was 0.35 for
+2018-2021, that no uncertainty-grid model including estimation uncertainty was
+below the 20 percent $SB_{F=0}$ limit reference point, that median
+$F_{recent}/F_{MSY}$ was 0.59 for 2017-2020, and that the WCPO bigeye stock
+was not overfished or undergoing overfishing.
+
+> **TODO:** Add final bullet conclusions on stock trajectory, recent depletion,
+> fishing mortality, uncertainty, reference-point status, and management advice.
+> Until those values are produced from the final workflow, this draft should be
+> treated as a writing scaffold rather than stock-status advice.

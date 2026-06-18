@@ -1,0 +1,172 @@
+---
+bibliography: ../references.bib
+---
+
+# Introduction
+
+This document reports the `r assessment_name` for `r species_label`
+(*`r species_scientific`*) in the `r assessment_area`. Bigeye tuna stock
+assessments in the WCPO have been conducted regularly since the late 1990s
+[@langley_stock_2008; @harley_stock_2009; @harley_stock_2010;
+@davies_stock_2011; @harley_stock_2014; @mckechnie_stock_2017;
+@vincent_incorporation_2018; @ducharme-barth_stock_2020]. As in previous
+assessments, the objectives are to estimate population quantities that indicate
+stock status and fishing impacts, including recruitment, biomass, biomass
+depletion, fishing mortality, and management reference points.
+
+The assessment methodology follows the integrated modelling approach
+[@fournier_general-theory_1982] implemented in MULTIFAN-CL (MFCL)
+[@fournier_multifan-cl_1998; @hampton_spatially-disaggregated_2001;
+@kleiber_multifan-cl_2019]. MFCL implements a size-based, age- and
+spatially-structured population model. Model parameters are estimated by
+maximising an objective function that combines likelihood components for the
+observed data with penalty terms used to constrain selected biological or
+fishery processes.
+
+Each new assessment normally updates catch, effort, size-composition, tagging,
+biological, and abundance-index inputs; incorporates new software or analysis
+methods; and revisits assumptions that may affect stock-status estimates.
+Advice from the WCPFC Scientific Committee, pre-assessment workshops, peer
+review, and supporting analysis papers guides this process. The current draft
+therefore carries forward reusable background and methods text from the
+`r previous_assessment_year` assessment, while treating all `r assessment_year`
+model results and management-advice statements as placeholders until the final
+model outputs are accepted.
+
+The `r previous_assessment_year` assessment provides the immediate comparison
+point for this report. It extended the bigeye tuna assessment through 2021,
+retained the 9-region spatial structure used for management advice in 2020,
+and introduced a catch-conditioned MFCL framework with regional longline index
+fisheries. It also used sdmTMB standardised CPUE inputs, revised tagger-effect
+and tag-reporting analyses, additional size-composition screening, internal
+growth estimation from conditional age-at-length data, and a Lorenzen form for
+natural mortality at age. Those elements should be checked first when
+describing what has changed in the `r assessment_year` assessment.
+
+## Study Objectives
+
+The objectives of this report are to:
+
+- describe the final assessment data and model configuration;
+- document the main model development steps and sensitivity analyses;
+- present diagnostics and fits to the data sources used in the model;
+- summarise structural and estimation uncertainty for management quantities;
+- provide stock-status advice from the agreed model set.
+
+## Background
+
+The assessment uses a set of models to explore structural uncertainty. Such a
+grid is designed to represent interactions among selected axes of uncertainty
+related to biological assumptions, data inputs, data treatment, and model
+structure. The axes are usually selected from one-off sensitivities around a
+diagnostic or base model. Variation in the key management quantities across the
+grid should be considered carefully when formulating management advice.
+
+For continuity, the `r previous_assessment_year` assessment combined
+structural uncertainty from a 54-model grid with estimation uncertainty for the
+key management quantities. The main factors highlighted when evaluating stock
+status were tag mixing period, stock-recruitment steepness, and
+size-composition weighting. The `r assessment_year` report should identify
+which of those axes remain relevant, which are replaced by new axes, and which
+are resolved by updated data, software, or model diagnostics.
+
+> **TODO:** Add the final supporting papers, PAW/SC guidance, peer-review
+> context, and confirmed uncertainty axes that directly apply to the
+> `r assessment_year` assessment.
+
+## Stock Structure
+
+Bigeye tuna are distributed throughout tropical and subtropical waters of the
+Pacific, Indian and Atlantic Oceans. Genetic studies indicate limited mixing
+between Atlantic bigeye tuna and bigeye tuna in the Indo-Pacific regions
+[@chow_genetic_2000; @gonzalez_genetic_2008; @grewe_population_2019], but there
+is currently no clear evidence for genetic population structure within the
+Pacific Ocean [@grewe_assessment_1998; @moore_defining_2020;
+@natasha_no_2022]. Conventional and electronic tagging data are broadly
+consistent with a continuous Pacific distribution with occasional long-distance
+movement, while also indicating important spatial heterogeneity in movement,
+growth, recruitment, and fishery processes [@schaefer_movements_2015;
+@moore_defining_2020].
+
+The `r previous_assessment_year` assessment considered recent reviews of
+population structure and spatial stratification [@hamer_review_2023]. Those
+reviews suggested that bigeye tuna are likely one genetic stock in the Pacific,
+while also noting that the western and eastern Pacific, tropical and temperate
+areas, and the Indonesia/Philippines/Vietnam region are unlikely to be fully
+mixed for assessment purposes. The current assessment should document whether
+the spatial stratification remains unchanged or whether an alternative regional
+structure is adopted.
+
+In `r previous_assessment_year`, the assessment area covered the WCPO from
+50 degrees N to 20 degrees S between 120 degrees E and 150 degrees W, plus
+oceanic waters adjacent to the east Asian coast between 110 degrees E and
+120 degrees E from 20 degrees N to 20 degrees S. The eastern boundary excluded
+the WCPFC Convention Area component overlapping the IATTC area. The model used
+the same 9-region stratification as the 2020 assessment, including small
+regions intended to represent the Papua New Guinea/Solomon Islands
+archipelagic area and Coral Sea tagging information. A simpler 6-region
+structure was discussed and explored preliminarily, but the 9-region model was
+retained after its convergence properties were improved.
+
+> **TODO:** Confirm the `r assessment_year` regional structure, the number of
+> model regions, stock-structure evidence, movement assumptions, and changes
+> from `r previous_assessment_year`.
+
+## Biological Characteristics
+
+Bigeye tuna are moderately fast-growing tuna and may reach fork lengths of
+approximately 200 cm [@aires-da-silva_improved_2015; @farley_age_2017].
+Growth parameters are influential biological inputs to the assessment
+[@mckechnie_stock_2017; @vincent_incorporation_2018], and recent assessments
+have considered otolith, tag-increment, and conditional age-at-length
+information [@eveson_integrated_2020; @farley_age_2020].
+
+Bigeye tuna in the WCPO become reproductively active from about 80 cm fork
+length, with most fish mature by approximately 120 cm fork length
+[@farley_age_2017]. The assessment uses spawning potential rather than simple
+spawning biomass because reproductive output depends on maturity, female
+sex-ratio, and fecundity. Natural mortality is size- or age-dependent and is an
+important source of biological uncertainty [@hampton_natural_2000;
+@farley_age_2020].
+
+The `r previous_assessment_year` assessment followed the yellowfin tuna peer
+review recommendation to use conditional age-at-length data directly in MFCL
+for internal growth estimation [@punt_independent_2023]. It also moved from
+the fixed natural-mortality-at-age function used in the 2020 assessment to
+internal estimation using a Lorenzen functional form. For the current report,
+these are important carry-forward assumptions to confirm, because they affect
+growth, maturity-at-age translation, fishing mortality-at-age, yield analyses,
+and the interpretation of depletion.
+
+> **TODO:** Replace or refine this text with confirmed `r assessment_year`
+> biological inputs, including growth, maturity, natural mortality,
+> length-weight conversion, recruitment assumptions, and conditional
+> age-at-length data.
+
+## Fisheries
+
+Bigeye tuna are an important component of tuna fisheries throughout the Pacific
+Ocean. Larger bigeye tuna are targeted by longline fleets, particularly in
+tropical waters of the WCPO, while smaller fish are caught incidentally by purse
+seine vessels, especially in sets associated with floating objects. Bigeye tuna
+are a principal target species in tropical longline fisheries supplying frozen
+and fresh sashimi markets.
+
+Collaborative work among SPC, WCPFC, national fisheries agencies, and research
+partners has improved catch statistics and fishery definitions for several
+fleets, including Indonesia, the Philippines, and Vietnam. The final
+`r assessment_year` report should present the model fishery definitions, catch
+history, spatial distribution of catch, and data coverage used in the accepted
+input files.
+
+The `r previous_assessment_year` input files compiled quarterly data from
+1952-2021 and defined 41 fisheries for the 9-region model. These included
+extraction fisheries for longline, purse seine, pole-and-line, and
+miscellaneous Indonesia/Philippines/Vietnam fisheries, plus one regional
+longline index fishery for each model region. The `r assessment_year` report
+should identify whether the same fishery definitions are retained, whether new
+catch or effort revisions alter the time series, and whether recent purse-seine
+observer coverage or port-sampling updates require revised interpretation.
+
+> **TODO:** Update from the final `r assessment_year` fishery definitions,
+> catch summaries, regional maps, and data-coverage diagnostics.

@@ -1,0 +1,13 @@
+# Figures
+
+This section is driven by `catalog/figures.csv`. When the assessment pipeline
+or a local analysis places matching report-ready figures in the configured
+figure folders, the figure and caption are inserted automatically. Missing
+figures remain visible as TODO items so the report can render before every
+assessment figure is available.
+
+```{r figure-catalog, echo=FALSE, results='asis', message=FALSE, warning=FALSE}
+figure_catalog <- read_catalog("figures")
+emit_catalog_figures(figure_catalog, roots = report_paths("figure_roots", c("Figures/generated", "Figures/static", "Figures")))
+emit_extra_generated_figures(figure_catalog, roots = report_paths("extra_figure_roots", c("Figures/generated")))
+```

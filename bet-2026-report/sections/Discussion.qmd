@@ -1,0 +1,73 @@
+---
+bibliography: ../references.bib
+---
+
+# Discussion
+
+## Model Interpretation and Stock Status
+
+The interpretation of the selected `r species_label` model should consider the
+diagnostic evidence, data conflicts, sensitivity runs, structural uncertainty,
+and implications for stock-status advice.
+
+> **TODO:** Add the final interpretation after the diagnostic model and
+> management-advice grid are accepted.
+
+## Comparison with the Previous Assessment
+
+The comparison with the `r previous_assessment_year` assessment should identify
+which changes are caused by new data, model structure, biological assumptions,
+CPUE standardisation, tagging treatment, model software, and convergence or
+uncertainty treatment.
+
+The first comparison pass should separate changes in the data time series from
+changes in assumptions. The `r previous_assessment_year` assessment introduced
+or emphasised the following items that should be checked explicitly:
+catch-conditioned modelling and index-fishery CPUE likelihood; sdmTMB CPUE
+standardisation and region-specific CPUE variances; internal growth estimation
+from conditional age-at-length data; Lorenzen natural mortality; revised
+tagger-effect and tag-reporting treatments; size-composition filtering and
+weighting; selectivity penalty settings; and extensive jitter/Hessian
+screening of diagnostic and grid models.
+
+> **TODO:** Compare against the previous assessment only after equivalent
+> quantities are recomputed from the `r assessment_year` analysis pipeline.
+
+## Remaining Uncertainties
+
+Remaining uncertainties should be separated into data limitations, model
+structure, biological assumptions, tagging assumptions, abundance-index
+uncertainty, and computational or convergence limitations.
+
+Reusable uncertainty themes from the previous assessment include the importance
+of representative biological sampling, the sensitivity of tag-based models to
+tag mixing and reporting assumptions, the influence of size-composition data
+filtering and weighting, and the need to diagnose convergence carefully in
+complex integrated models. These themes should be retained only where the
+current diagnostics support them.
+
+The previous assessment also noted that apparently well-converged local
+solutions could be improved through jittering, sometimes with meaningful
+changes in derived management quantities. For the current report, uncertainty
+statements should therefore distinguish between structural uncertainty,
+estimation uncertainty, and optimisation uncertainty. Where models have
+non-positive-definite Hessians or small negative eigenvalues, the text should
+explain whether key management quantities remain stable and whether estimation
+uncertainty was still calculated.
+
+> **TODO:** Replace with the final `r assessment_year` uncertainty discussion.
+
+## Research Recommendations
+
+> **TODO:** Update recommendations from the `r assessment_year` assessment.
+> Reuse previous recommendations only where they remain directly supported by
+> the current diagnostics and data review.
+
+Potential carry-forward recommendations from the previous assessment include
+continued representative biological sampling, especially age data; sustained
+technical capacity for software, data preparation, and quality control; enough
+assessment time and computing resources to explore complex integrated models;
+continued collection of representative tagging data; and comprehensive review
+of size-composition data. These should be edited or removed after the
+`r assessment_year` diagnostics show which data sources and assumptions are
+most limiting.
