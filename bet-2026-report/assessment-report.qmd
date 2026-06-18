@@ -39,6 +39,7 @@ format:
     number-sections: true
     link-citations: true
     colorlinks: true
+    html-math-method: mathml
     highlight-style: github
     self-contained: true
     css: styles.css
