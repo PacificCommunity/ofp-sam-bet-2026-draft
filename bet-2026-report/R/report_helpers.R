@@ -417,9 +417,9 @@ emit_catalog_figures <- function(catalog,
 emit_extra_generated_figures <- function(catalog,
                                          roots = c("Figures/generated")) {
   roots <- roots[dir.exists(roots)]
-  files <- unique(unlist(lapply(roots, function(root) {
-    list.files(root, pattern = "[.](png|jpg|jpeg|pdf)$", recursive = TRUE, full.names = TRUE, ignore.case = TRUE)
-  }), use.names = FALSE))
+  files <- sort(unique(unlist(lapply(roots, function(root) {
+    list.files(root, pattern = "[.](png|jpg|jpeg|pdf|svg)$", recursive = TRUE, full.names = TRUE, ignore.case = TRUE)
+  }), use.names = FALSE)))
   if (!length(files)) {
     return(invisible(FALSE))
   }
@@ -428,7 +428,7 @@ emit_extra_generated_figures <- function(catalog,
   catalog_candidates <- trimws(tolower(basename(catalog_candidates)))
   catalog_stems <- tools::file_path_sans_ext(catalog_candidates)
   file_stems <- tools::file_path_sans_ext(tolower(basename(files)))
-  extra <- files[!file_stems %in% catalog_stems]
+  extra <- sort(files[!file_stems %in% catalog_stems])
   if (!length(extra)) {
     return(invisible(FALSE))
   }
@@ -437,8 +437,13 @@ emit_extra_generated_figures <- function(catalog,
   cat("\n## Additional Generated Figures\n\n")
   for (file in extra) {
     label <- tools::file_path_sans_ext(basename(file))
-    title <- gsub("[-_]+", " ", label)
-    title <- paste0(toupper(substr(title, 1, 1)), substr(title, 2, nchar(title)))
+    row <- figure_metadata_row(file, metadata)
+    title <- if (!is.null(row) && "label" %in% names(row) && nzchar(trimws(row$label[[1]]))) {
+      render_report_text(row$label[[1]])
+    } else {
+      title <- gsub("[-_]+", " ", label)
+      paste0(toupper(substr(title, 1, 1)), substr(title, 2, nchar(title)))
+    }
     cat("### ", title, "\n\n", sep = "")
     caption <- figure_caption(file, paste("Additional generated figure:", title), metadata)
     cat(sprintf("![%s](%s){#fig-extra-%s fig-align=\"center\" width=100%%}\n\n",
