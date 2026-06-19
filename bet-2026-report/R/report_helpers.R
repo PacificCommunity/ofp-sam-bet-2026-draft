@@ -48,6 +48,28 @@ slug_id <- function(x) {
   if (!nzchar(x)) "item" else x
 }
 
+clean_text <- function(x) {
+  x <- trimws(as.character(x %||% ""))
+  x[is.na(x)] <- ""
+  x
+}
+
+has_text <- function(x) {
+  any(nzchar(clean_text(x)))
+}
+
+file_match_tokens <- function(path) {
+  path <- as.character(path %||% "")
+  base <- tolower(basename(path))
+  stem <- tolower(tools::file_path_sans_ext(base))
+  unique(c(base, stem, slug_id(stem)))
+}
+
+catalog_candidate_tokens <- function(candidates) {
+  candidates <- split_catalog_paths(candidates)
+  unique(unlist(lapply(candidates, file_match_tokens), use.names = FALSE))
+}
+
 render_report_text <- function(x) {
   x <- as.character(x %||% "")
   values <- list(
@@ -198,7 +220,11 @@ figure_metadata_row <- function(file, metadata) {
   metadata[source_col[[hit]], , drop = FALSE]
 }
 
-figure_caption <- function(file, default, metadata = data.frame()) {
+figure_caption <- function(file, default, metadata = data.frame(), override = "") {
+  override <- render_report_text(override)
+  if (nzchar(trimws(override))) {
+    return(polish_report_caption(override))
+  }
   row <- figure_metadata_row(file, metadata)
   if (!is.null(row) && "caption" %in% names(row)) {
     caption <- render_report_text(row$caption[[1]])
@@ -207,6 +233,143 @@ figure_caption <- function(file, default, metadata = data.frame()) {
     }
   }
   polish_report_caption(default)
+}
+
+normalize_figure_placement <- function(x, default = "main") {
+  value <- tolower(trimws(as.character(x %||% "")))
+  if (!nzchar(value) || is.na(value)) {
+    value <- default
+  }
+  value <- gsub("[^a-z0-9]+", "-", value)
+  aliases <- c(
+    body = "main",
+    report = "main",
+    primary = "main",
+    include = "main",
+    yes = "main",
+    y = "main",
+    true = "main",
+    "1" = "main",
+    supplemental = "appendix",
+    supplement = "appendix",
+    supp = "appendix",
+    extra = "appendix",
+    excluded = "exclude",
+    skip = "exclude",
+    omit = "exclude",
+    no = "exclude",
+    n = "exclude",
+    false = "exclude",
+    "0" = "exclude"
+  )
+  if (value %in% names(aliases)) {
+    value <- aliases[[value]]
+  }
+  if (value %in% c("main", "appendix", "exclude")) value else default
+}
+
+catalog_figure_placement <- function(catalog, default = "main") {
+  catalog <- complete_catalog(catalog, "figures")
+  vapply(catalog$placement, normalize_figure_placement, character(1), default = default)
+}
+
+complete_figure_curation <- function(curation) {
+  needed <- c("target_type", "target", "placement", "section", "title", "caption_override", "order", "notes")
+  if (!is.data.frame(curation)) {
+    curation <- data.frame(stringsAsFactors = FALSE)
+  }
+  for (name in setdiff(needed, names(curation))) {
+    curation[[name]] <- ""
+  }
+  curation[, needed, drop = FALSE]
+}
+
+figure_curation_target_type <- function(x) {
+  value <- tolower(clean_text(x))
+  value <- gsub("[^a-z0-9]+", "-", value)
+  value[value %in% c("", "catalog", "catalog-key", "row")] <- "key"
+  value[value %in% c("filename", "path", "image")] <- "file"
+  value[!value %in% c("key", "file")] <- "key"
+  value
+}
+
+figure_curation_matches_key <- function(curation, key, candidates = "") {
+  curation <- complete_figure_curation(curation)
+  if (!nrow(curation)) {
+    return(curation[0, , drop = FALSE])
+  }
+  target_type <- figure_curation_target_type(curation$target_type)
+  targets <- clean_text(curation$target)
+  key_tokens <- unique(c(tolower(clean_text(key)), slug_id(key)))
+  target_slugs <- vapply(targets, slug_id, character(1))
+  hit <- target_type == "key" & (tolower(targets) %in% key_tokens | target_slugs %in% key_tokens)
+  curation[hit & nzchar(targets), , drop = FALSE]
+}
+
+figure_curation_matches_file <- function(curation, file) {
+  curation <- complete_figure_curation(curation)
+  if (!nrow(curation)) {
+    return(curation[0, , drop = FALSE])
+  }
+  target_type <- figure_curation_target_type(curation$target_type)
+  targets <- clean_text(curation$target)
+  file_tokens <- file_match_tokens(file)
+  target_stem_slugs <- vapply(tools::file_path_sans_ext(targets), slug_id, character(1))
+  hit <- target_type == "file" &
+    (tolower(basename(targets)) %in% file_tokens | target_stem_slugs %in% file_tokens)
+  curation[hit & nzchar(targets), , drop = FALSE]
+}
+
+last_nonempty <- function(x) {
+  x <- clean_text(x)
+  x <- x[nzchar(x)]
+  if (length(x)) x[[length(x)]] else ""
+}
+
+apply_figure_curation <- function(catalog, curation = data.frame()) {
+  catalog <- complete_catalog(catalog, "figures")
+  curation <- complete_figure_curation(curation)
+  if (!nrow(catalog) || !nrow(curation)) {
+    return(catalog)
+  }
+  catalog$.original_order <- seq_len(nrow(catalog))
+  catalog$.curation_order <- NA_real_
+  for (i in seq_len(nrow(catalog))) {
+    matches <- figure_curation_matches_key(
+      curation,
+      key = catalog$key[[i]],
+      candidates = catalog$file_candidates[[i]]
+    )
+    if (!nrow(matches)) {
+      next
+    }
+    for (field in c("placement", "section", "title", "caption_override", "notes")) {
+      value <- last_nonempty(matches[[field]])
+      if (nzchar(value)) {
+        catalog[[field]][[i]] <- value
+      }
+    }
+    order_value <- suppressWarnings(as.numeric(last_nonempty(matches$order)))
+    if (is.finite(order_value)) {
+      catalog$.curation_order[[i]] <- order_value
+    }
+  }
+  if (any(is.finite(catalog$.curation_order))) {
+    catalog <- catalog[order(is.na(catalog$.curation_order), catalog$.curation_order, catalog$.original_order), , drop = FALSE]
+  }
+  catalog$.original_order <- NULL
+  catalog$.curation_order <- NULL
+  rownames(catalog) <- NULL
+  catalog
+}
+
+filter_catalog_figures <- function(catalog, placements = "main") {
+  if (!nrow(catalog)) {
+    return(complete_catalog(catalog, "figures"))
+  }
+  catalog <- complete_catalog(catalog, "figures")
+  wanted <- vapply(placements, normalize_figure_placement, character(1), default = "main")
+  catalog[catalog_figure_placement(catalog) %in% wanted, , drop = FALSE]
 }
 
 read_table_metadata <- function(roots = c("tables/generated", "tables", "Tables")) {
@@ -392,9 +555,16 @@ emit_config_warnings <- function() {
 }
 
 emit_catalog_figures <- function(catalog,
-                                 roots = c("Figures/generated", "Figures/static", "Figures")) {
+                                 roots = c("Figures/generated", "Figures/static", "Figures"),
+                                 curation = data.frame(),
+                                 placements = "main",
+                                 empty_todo = TRUE) {
+  catalog <- apply_figure_curation(catalog, curation)
+  catalog <- filter_catalog_figures(catalog, placements = placements)
   if (!nrow(catalog)) {
-    emit_todo("Add figure catalog rows to catalog/figures.csv.")
+    if (isTRUE(empty_todo)) {
+      emit_todo("Add figure catalog rows to catalog/figures.csv.")
+    }
     return(invisible(FALSE))
   }
 
@@ -407,6 +577,7 @@ emit_catalog_figures <- function(catalog,
     title <- render_report_text(catalog$title[[i]])
     key <- slug_id(catalog$key[[i]])
     caption <- render_report_text(catalog$caption[[i]])
+    caption_override <- render_report_text(catalog$caption_override[[i]])
     todo <- render_report_text(catalog$todo[[i]])
     files <- find_report_assets(catalog$file_candidates[[i]], roots = roots)
 
@@ -420,9 +591,9 @@ emit_catalog_figures <- function(catalog,
       for (j in seq_along(files)) {
         figure_id <- if (length(files) == 1L) key else paste(key, j, sep = "-")
         figure_caption <- if (length(files) == 1L) {
-          figure_caption(files[[j]], caption, metadata)
+          figure_caption(files[[j]], caption, metadata, override = caption_override)
         } else {
-          figure_caption(files[[j]], sprintf("%s (panel %d of %d).", caption, j, length(files)), metadata)
+          figure_caption(files[[j]], sprintf("%s (panel %d of %d).", caption, j, length(files)), metadata, override = caption_override)
         }
         cat(sprintf("![%s](%s){#fig-%s fig-align=\"center\" width=100%%}\n\n",
                     figure_caption, markdown_path(files[[j]]), figure_id))
@@ -439,6 +610,22 @@ is_fishery_composition_figure <- function(path) {
   stem <- tools::file_path_sans_ext(tolower(basename(path)))
   stem <- gsub("_", "-", stem, fixed = TRUE)
   grepl("^(length|weight)-frequency(-residuals)?-fishery-", stem)
+}
+
+is_default_excluded_figure <- function(path) {
+  stem <- tools::file_path_sans_ext(tolower(basename(path)))
+  stem <- gsub("_", "-", stem, fixed = TRUE)
+  stem %in% c(
+    "tag-recapture-pressure-release-group",
+    "tag-recapture-pressure-release-group-by-fishery"
+  )
+}
+
+catalog_all_candidate_tokens <- function(catalog) {
+  if (!is.data.frame(catalog) || !nrow(catalog) || !"file_candidates" %in% names(catalog)) {
+    return(character())
+  }
+  unique(unlist(lapply(catalog$file_candidates, catalog_candidate_tokens), use.names = FALSE))
 }
 
 emit_generated_figure_group <- function(files, heading, metadata, id_prefix) {
@@ -463,8 +650,78 @@ emit_generated_figure_group <- function(files, heading, metadata, id_prefix) {
   invisible(TRUE)
 }
 
+emit_curated_file_figures <- function(curation,
+                                      catalog = data.frame(),
+                                      roots = c("Figures/generated", "Figures/static", "Figures"),
+                                      placements = "main",
+                                      default_section = "Curated generated figures",
+                                      id_prefix = "curated") {
+  curation <- complete_figure_curation(curation)
+  if (!nrow(curation)) {
+    return(invisible(FALSE))
+  }
+  wanted <- vapply(placements, normalize_figure_placement, character(1), default = "main")
+  placement <- vapply(curation$placement, normalize_figure_placement, character(1), default = "appendix")
+  target_type <- figure_curation_target_type(curation$target_type)
+  curation <- curation[target_type == "file" & placement %in% wanted, , drop = FALSE]
+  if (!nrow(curation)) {
+    return(invisible(FALSE))
+  }
+
+  catalog_tokens <- catalog_all_candidate_tokens(catalog)
+  target_tokens <- vapply(curation$target, function(target) {
+    paste(file_match_tokens(target), collapse = "\n")
+  }, character(1))
+  curation <- curation[!vapply(target_tokens, function(tokens) {
+    any(strsplit(tokens, "\n", fixed = TRUE)[[1]] %in% catalog_tokens)
+  }, logical(1)), , drop = FALSE]
+  if (!nrow(curation)) {
+    return(invisible(FALSE))
+  }
+
+  order_value <- suppressWarnings(as.numeric(clean_text(curation$order)))
+  curation$.original_order <- seq_len(nrow(curation))
+  curation$.curation_order <- order_value
+  if (any(is.finite(curation$.curation_order))) {
+    curation <- curation[order(is.na(curation$.curation_order), curation$.curation_order, curation$.original_order), , drop = FALSE]
+  }
+  curation$.original_order <- NULL
+  curation$.curation_order <- NULL
+
+  metadata <- read_figure_metadata(roots)
+  last_section <- ""
+  wrote <- FALSE
+  for (i in seq_len(nrow(curation))) {
+    target <- clean_text(curation$target[[i]])
+    file <- find_report_asset(target, roots = roots)
+    if (!nzchar(file) || is_default_excluded_figure(file)) {
+      next
+    }
+    section <- render_report_text(curation$section[[i]])
+    if (!nzchar(section)) {
+      section <- default_section
+    }
+    title <- render_report_text(curation$title[[i]])
+    if (!nzchar(title)) {
+      title <- gsub("[-_]+", " ", tools::file_path_sans_ext(basename(file)))
+      title <- paste0(toupper(substr(title, 1, 1)), substr(title, 2, nchar(title)))
+    }
+    if (!identical(section, last_section)) {
+      cat("\n## ", section, "\n\n", sep = "")
+      last_section <- section
+    }
+    cat("### ", title, "\n\n", sep = "")
+    caption <- figure_caption(file, title, metadata, override = curation$caption_override[[i]])
+    cat(sprintf("![%s](%s){#fig-%s-%s fig-align=\"center\" width=100%%}\n\n",
+                caption, markdown_path(file), id_prefix, slug_id(tools::file_path_sans_ext(basename(file)))))
+    wrote <- TRUE
+  }
+  invisible(wrote)
+}
+
 emit_extra_generated_figures <- function(catalog,
-                                         roots = c("Figures/generated")) {
+                                         roots = c("Figures/generated"),
+                                         curation = data.frame()) {
   roots <- roots[dir.exists(roots)]
   files <- sort(unique(unlist(lapply(roots, function(root) {
     list.files(root, pattern = "[.](png|jpg|jpeg|pdf|svg)$", recursive = TRUE, full.names = TRUE, ignore.case = TRUE)
@@ -478,6 +735,11 @@ emit_extra_generated_figures <- function(catalog,
   catalog_stems <- tools::file_path_sans_ext(catalog_candidates)
   file_stems <- tools::file_path_sans_ext(tolower(basename(files)))
   extra <- sort(files[!file_stems %in% catalog_stems])
+  extra <- extra[!is_default_excluded_figure(extra)]
+  curation <- complete_figure_curation(curation)
+  if (nrow(curation)) {
+    extra <- extra[!vapply(extra, function(file) nrow(figure_curation_matches_file(curation, file)) > 0, logical(1))]
+  }
   if (!length(extra)) {
     return(invisible(FALSE))
   }
@@ -596,9 +858,9 @@ emit_catalog_tables <- function(catalog,
 emit_extra_generated_tables <- function(catalog,
                                         roots = c("tables/generated")) {
   roots <- roots[dir.exists(roots)]
-  files <- unique(unlist(lapply(roots, function(root) {
+  files <- as.character(unique(unlist(lapply(roots, function(root) {
     list.files(root, pattern = "[.]csv$", recursive = TRUE, full.names = TRUE, ignore.case = TRUE)
-  }), use.names = FALSE))
+  }), use.names = FALSE)) %||% character())
   files <- files[!grepl("(^|/)(mfclshiny-)?table-index[.]csv$|(^|/)generated-table-index[.]csv$", files, ignore.case = TRUE)]
   files <- files[!is_internal_report_table(files)]
   if (!length(files)) {

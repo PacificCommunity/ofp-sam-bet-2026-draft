@@ -50,6 +50,7 @@ load_report_context <- function(config_file = "report-config.yml") {
     draft_watermark = tolower(metadata_value("draft_watermark", "true")) %in% c("true", "yes", "1", "on"),
     watermark_text = metadata_value("watermark_text", "DRAFT - DO NOT CITE OR REDISTRIBUTE"),
     figure_catalog = metadata_value("figure_catalog", "catalog/figures.csv"),
+    figure_curation = metadata_value("figure_curation", "catalog/figure-curation.csv"),
     table_catalog = metadata_value("table_catalog", "catalog/tables.csv"),
     figure_roots = metadata_value("figure_roots", "Figures/generated;Figures/static;Figures"),
     extra_figure_roots = metadata_value("extra_figure_roots", "Figures/generated"),

@@ -153,6 +153,7 @@ prepare_runtime_packages
 Rscript R/prepare_report_inputs.R
 
 cd "${REPORT_DIR}"
+Rscript R/figure_curation.R review
 quarto render "${REPORT_QMD}" --to html --output bet-2026-report.html
 quarto render "${REPORT_QMD}" --to pdf --output bet-2026-report.pdf
 cd "${ROOT}"
@@ -245,6 +246,19 @@ for (file in final_files) {
   copy_file(file, file.path(out, "final-report", basename(file)))
 }
 
+curation_dir <- file.path(report_dir, "curation")
+if (dir.exists(curation_dir)) {
+  curation_files <- list.files(curation_dir, recursive = TRUE, full.names = TRUE)
+  for (file in curation_files) {
+    rel <- sub(paste0("^", gsub("([][{}()+*^$|\\\\?.])", "\\\\\\1", curation_dir), "/?"), "", file)
+    copy_file(file, file.path(out, "curation", rel))
+  }
+}
+curation_catalog <- file.path(report_dir, "catalog", "figure-curation.csv")
+if (file.exists(curation_catalog)) {
+  copy_file(curation_catalog, file.path(out, "curation", "figure-curation.csv"))
+}
+
 figure_dir <- file.path(report_dir, "Figures", "generated")
 figure_index_path <- file.path(figure_dir, "figure-index.csv")
 figure_index <- read_csv_safe(figure_index_path)
@@ -298,8 +312,10 @@ summary <- data.frame(
   type = ifelse(
     grepl("^final-report/.*[.](html|pdf)$", files, ignore.case = TRUE),
     "final-report",
-    ifelse(grepl("^figures/", files), "figure",
+    ifelse(grepl("^curation/", files), "curation",
+      ifelse(grepl("^figures/", files), "figure",
       ifelse(grepl("^tables/", files), "table", "index")
+      )
     )
   ),
   size_bytes = suppressWarnings(file.info(file.path(out, files))$size),
@@ -309,5 +325,6 @@ utils::write.csv(summary, file.path(out, "indices", "report-output-index.csv"), 
 message("Organized report outputs under ", out, ": ",
         sum(summary$type == "final-report"), " final files, ",
         length(unique(dirname(summary$output[summary$type == "figure"]))), " figure folders, ",
-        length(unique(dirname(summary$output[summary$type == "table"]))), " table folders.")
+        length(unique(dirname(summary$output[summary$type == "table"]))), " table folders, ",
+        sum(summary$type == "curation"), " curation files.")
 RS

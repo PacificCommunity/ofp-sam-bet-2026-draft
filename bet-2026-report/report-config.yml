@@ -17,6 +17,7 @@ report_status: "Working draft"
 draft_watermark: true
 watermark_text: "DRAFT - DO NOT CITE OR REDISTRIBUTE"
 figure_catalog: "catalog/figures.csv"
+figure_curation: "catalog/figure-curation.csv"
 table_catalog: "catalog/tables.csv"
 figure_roots: "Figures/generated;Figures/static;Figures"
 extra_figure_roots: "Figures/generated"
