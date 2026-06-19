@@ -1,9 +1,9 @@
 # BET 2026 Report Draft
 
 Use `assessment-report.qmd` as the main Quarto document for the BET 2026
-working draft. This folder is based on `../tuna-report/`, but includes reusable
-bigeye tuna background, methods text, and the 2023 BET bibliography as a
-starting point.
+working draft. The folder contains the BET 2026 report configuration,
+assessment narrative, catalogs, references, and helper code used to insert
+workflow-generated figures and tables.
 
 Edit these first as 2026 results become available:
 
@@ -18,13 +18,13 @@ Edit these first as 2026 results become available:
   `{previous_assessment_year}`.
 - `catalog/tables.csv`: table order, matching CSV filenames, captions, and TODO
   text.
-- `references.bib`: report references copied from the 2023 BET writeup.
+- `references.bib`: report references for the BET assessment draft.
 
 Draft protection is on by default through `draft_watermark` and
 `watermark_text` in `report-config.yml`. Keep it enabled until the report is
 approved for wider release.
 
-Reusable structure inherited from `tuna-report/`:
+Main report components:
 
 - `report-config.yml`: project metadata and draft-watermark settings.
 - `catalog/figures.csv`: figure order, filenames, captions, TODO text.
@@ -34,7 +34,7 @@ Reusable structure inherited from `tuna-report/`:
 - `R/catalog.R`: reads and validates figure/table catalogs.
 - `R/report_helpers.R`: renders TODO blocks, figures, captions, and tables.
 
-To add figures that were not in the previous assessment:
+To add figures:
 
 1. Add the generated file to the pipeline figure bundle, or place a checked
    static file under `Figures/static/`.
@@ -44,11 +44,11 @@ To add figures that were not in the previous assessment:
    item has several panels or companion figures. Matching files are inserted in
    that order.
 4. Leave it out of the catalog for a quick review figure; uncatalogued
-   generated figures are rendered under "Additional Generated Figures" so they
-   are still visible during drafting.
+   generated figures are rendered in the appendix so they are still visible
+   during drafting without crowding the main figure catalog.
 
-To add tables that were not in the previous assessment, write the table as CSV
-under `tables/` or `Tables/` and add a row to `catalog/tables.csv`.
+To add tables, write the table as CSV under `tables/` or `Tables/` and add a
+row to `catalog/tables.csv`.
 
 Pipeline-generated outputs:
 

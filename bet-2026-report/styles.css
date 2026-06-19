@@ -16,6 +16,12 @@ blockquote {
 
 table {
   font-size: 0.86rem;
+  width: auto;
+  max-width: 100%;
+}
+
+.table-responsive {
+  overflow-x: auto;
 }
 
 body.draft-watermark::before {

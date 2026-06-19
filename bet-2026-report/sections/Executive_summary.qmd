@@ -5,53 +5,27 @@ bibliography: ../references.bib
 # Executive Summary {.unnumbered}
 
 This report is a `r report_status` for the `r assessment_name` in the
-`r assessment_area`. The draft follows the structure of the previous bigeye
-tuna assessment while separating text that is broadly reusable from statements
-that must be regenerated from the `r assessment_year` model outputs.
+`r assessment_area`. It summarises the data, model configuration, diagnostics,
+uncertainty treatment, and management quantities for the `r assessment_year`
+assessment of `r species_label` (*`r species_scientific`*).
 
-The `r previous_assessment_year` assessment described an integrated
-MULTIFAN-CL assessment of bigeye tuna in the western and central Pacific Ocean
-with major supporting analyses for abundance indices, tag reporting and tagger
-effects, size composition preparation, length-weight conversion factors, and
-MFCL software developments [@teears_cpue_2023; @peatman_analysis_2023;
-@peatman_analysis_2023-1; @peatman_analysis_2023-2;
-@macdonald_project_2023-1; @davies_developments_2023]. Those components form
-the starting point for this `r assessment_year` draft, but all year-specific
-model settings, final data years, diagnostics, and management-advice quantities
-must be checked against the current analysis.
+The assessment uses an integrated MULTIFAN-CL modelling framework with fishery
+catch, effort, size-composition, tagging, biological, and abundance-index data.
+Report-ready figures and tables are inserted automatically from the selected
+workflow outputs. Text marked as TODO identifies the interpretation or final
+assessment values that must be completed after the accepted model set has been
+reviewed.
 
-As a benchmark for comparison, the `r previous_assessment_year` report
-estimated median recent spawning depletion at 0.35 for 2018-2021 after
-combining structural and estimation uncertainty, with an 80 percent interval of
-0.30-0.40 and a full range of 0.25-0.46. Median recent fishing mortality
-relative to $F_{MSY}$ was 0.59 for 2017-2020, with an 80 percent interval of
-0.46-0.74 and a full range of 0.37-0.99. The `r previous_assessment_year`
-assessment concluded that the WCPO bigeye tuna stock was not overfished and
-was not undergoing overfishing, and that no model in the uncertainty grid,
-including estimation uncertainty, was below the 20 percent $SB_{F=0}$ limit
-reference point.
+No stock-status values in this draft should be read as final advice until the
+diagnostic model, structural uncertainty set, and estimation-uncertainty
+workflow are confirmed.
 
-Those values are included here only as the previous-assessment baseline. The
-`r assessment_year` executive summary should replace them with current
-diagnostic-model, structural-uncertainty, and estimation-uncertainty results
-once the final model set has been accepted.
-
-## Main Updates Since `r previous_assessment_year`
+## Main Updates for `r assessment_year`
 
 > **TODO:** Summarise only changes confirmed for the `r assessment_year`
 > assessment, including the final data years, input-preparation changes, CPUE
 > standardisation changes, tagging changes, biological assumptions, MFCL or
 > mfclrtmb changes, and convergence or uncertainty treatment.
-
-The main changes that should be checked first against the `r assessment_year`
-workflow are the same areas that materially changed the `r previous_assessment_year`
-assessment relative to 2020: the catch-conditioned model framework and index
-fishery CPUE likelihood; sdmTMB-based standardised CPUE inputs; index-fishery
-CPUE variance treatment; internally estimated natural mortality using a
-Lorenzen form; internally estimated growth using conditional age-at-length
-data; revised tagger-effect and tag-reporting treatment; size-composition
-filtering and weighting; reduced use of non-decreasing selectivity penalties;
-and the combined treatment of structural and estimation uncertainty.
 
 ## Stock Status Summary
 
@@ -67,5 +41,5 @@ and the combined treatment of structural and estimation uncertainty.
 ## Main Conclusions
 
 > **TODO:** Replace this list with final assessment conclusions. Do not reuse
-> the `r previous_assessment_year` stock-status conclusions unless each
-> conclusion has been checked against the `r assessment_year` model outputs.
+> earlier stock-status conclusions unless each conclusion is supported by the
+> accepted `r assessment_year` assessment results.

@@ -11,33 +11,28 @@ size-composition, tagging, biological, and abundance-index data. The final data
 period currently needs to be confirmed; the report configuration records the
 latest data year as `r latest_data_year`.
 
-The `r previous_assessment_year` assessment covered 1952-2021 and excluded the
-most recent calendar year available at input preparation because it was
-considered incomplete and subject to post-SC revision. It compiled quarterly
-catch, effort, length-frequency, weight-frequency, tag-recapture, and
-conditional age-at-length data. The current data section should use that
-structure as a checklist while replacing every time period, data source,
-screening rule, and sampling summary with the accepted `r assessment_year`
-inputs.
+The final report should identify the years included for each input data stream,
+the date of the data extraction or database freeze, and any incomplete recent
+periods excluded from model fitting. Data screening, expansion, aggregation,
+and weighting rules should be traceable to the accepted `r assessment_year`
+input files.
 
 > **TODO:** Document the final data sources, screening rules, expansion methods,
-> and any differences from the `r previous_assessment_year` assessment.
+> and any differences from the most recent assessment.
 
 ## Fishery Definitions
 
 Model fisheries should be defined by gear, flag or fleet grouping, region,
 selectivity group, and tag-recapture group where applicable.
 
-In `r previous_assessment_year`, the 9-region model used 41 fisheries and
-separated extraction fisheries from regional longline index fisheries. The
-index fisheries were composite longline fisheries used to provide standardised
-CPUE information and did not remove catch from the stock. The `r assessment_year`
-fishery table should show any changes in gear/fleet definitions, regional
+Where index fisheries are used, the report should distinguish them from
+extraction fisheries and state how they contribute abundance-index information.
+The fishery definition table should show gear/fleet definitions, regional
 assignment, index-fishery grouping, selectivity grouping, and tag-recapture or
 reporting-rate groupings.
 
 > **TODO:** Insert the final fishery definition table from the input-preparation
-> workflow.
+> pipeline.
 
 ## Abundance Indices
 
@@ -45,15 +40,12 @@ The abundance-index section should describe nominal and standardised CPUE
 series, index fishery definitions, variance treatment, and any covariates or
 spatial models used outside the assessment model.
 
-The `r previous_assessment_year` assessment used operational longline data to
-derive regional abundance indices with sdmTMB [@anderson_sdmtmb_2022;
-@teears_cpue_2023]. That work moved from VAST to sdmTMB after confirming that
-the new workflow could closely replicate the previous VAST indices. The final
-bigeye CPUE model included hooks between floats, vessel flag, season, depth of
-the 15 degrees C isotherm, and the difference between the depths of the
-12 degrees C and 18 degrees C isotherms. Region-specific CPUE variance terms
-were estimated from log-residuals during model development and then fixed for
-later stepwise, diagnostic, and grid models.
+Standardised CPUE analyses should be summarised with the data filters,
+spatial-temporal model structure, covariates, index regions, and variance
+treatment used for the accepted assessment. Where sdmTMB or another external
+standardisation workflow is used, the report should cite the supporting
+analysis and describe how index uncertainties are passed to MFCL
+[@anderson_sdmtmb_2022; @teears_cpue_2023].
 
 > **TODO:** Summarise the final CPUE analysis and link to supporting papers or
 > analysis outputs.
@@ -63,14 +55,11 @@ later stepwise, diagnostic, and grid models.
 Length-frequency, weight-frequency, and age data should be described with their
 filtering, weighting, sample-size treatment, and reporting units.
 
-The previous assessment avoided using length and weight composition
-simultaneously for the same information source, weighted longline
-weight-frequency samples with respect to flag-specific catch distributions,
-halved input sample sizes where the same observations informed both extraction
-and index fisheries, and then applied additional down-weighting for the
-diagnostic model. Conditional age-at-length observations were used as a
-separate likelihood component for growth estimation and were down-weighted
-because the otolith samples were not fully independent.
+The final report should state whether length- and weight-composition data are
+used simultaneously for any fisheries, how sample sizes are scaled, how
+composition data are weighted, and whether conditional age-at-length
+observations are included as a separate likelihood component for growth
+estimation.
 
 > **TODO:** Add final sample-size summaries and data-weighting settings.
 
@@ -80,13 +69,11 @@ When tagging data are included, this section should describe release programs,
 recapture processing, tag-reporting groups, tagger effects, mixing assumptions,
 and tag likelihood settings.
 
-The `r previous_assessment_year` assessment included RTTP, historical Coral Sea
-tagging, PTTP, and Japanese tagging data. Tag releases were adjusted for tag
-loss, unusable recaptures, tagger effects, tag shedding, and initial mortality,
-and the tag-return likelihood used a negative binomial form. Tag mixing period
-was one of the dominant structural-uncertainty axes, so the `r assessment_year`
-report should explicitly document any retained or revised mixing-period,
-tagger-effect, reporting-rate, and east-of-150 degrees W recapture treatments.
+The final report should identify which tagging programs are included, how
+release and recapture records are processed, and how tag loss, unusable
+recaptures, tagger effects, tag shedding, initial mortality, mixing period,
+tag-reporting rates, and recapture-region treatments are represented in the
+model.
 
 > **TODO:** Confirm the final tagging treatment for the `r assessment_year`
 > model.
@@ -111,21 +98,11 @@ while still supporting reference-point calculations [@ianelli_independent_2012].
 
 Growth, maturity, natural mortality, movement, selectivity, tag-reporting rates,
 and fishery catchability are specified or estimated according to the selected
-model configuration. The `r previous_assessment_year` assessment estimated
-growth internally using conditional age-at-length information, used a Lorenzen
-form for natural mortality at age, and adopted a catch-conditioned framework.
-Those choices should be checked against the `r assessment_year` model-control
-files before final text is written.
-
-The previous model partitioned the population into spatial regions and 40
-quarterly age classes, with the oldest age class treated as a plus group and
-the model time window running from 1952 to 2021. Recruitment was estimated
-quarterly, the final six recruitment deviations were fixed at the geometric
-mean, and the Beverton-Holt stock-recruitment relationship was assigned a weak
-penalty so that it supported reference-point calculations without dominating
-historical recruitment estimates. The current model description should confirm
-whether these structural settings, the initial-population treatment, and the
-stock-recruitment steepness values remain the same.
+model configuration. The final model description should state the number of
+regions and quarterly age classes, the model time window, the oldest-age plus
+group, recruitment settings, initial-population treatment, stock-recruitment
+steepness values, penalty weights, and whether the model is catch-conditioned
+or uses catch-error dynamics.
 
 > **TODO:** Add final software versions, executable or backend details, model
 > time window, regional structure, age classes, parameter phases, control flags,
@@ -146,14 +123,10 @@ represented by the multinomial likelihood. Tag-recapture data are often fitted
 with an overdispersed likelihood because tag returns can be more variable than a
 simple Poisson process.
 
-For the previous assessment, catch-conditioned models reduced the effort
-deviation structure of earlier catch-errors models and allowed CPUE index
-fisheries to contribute a direct lognormal likelihood. Size-composition
-weighting was treated as an important sensitivity and grid axis, while
-Dirichlet-multinomial weighting was explored but not adopted for the diagnostic
-model because the preliminary weights degraded abundance-index fits. These
-decisions should be revisited against the current CPUE fits, composition fits,
-and diagnostics before being carried forward.
+The accepted likelihood settings should be checked against CPUE fits,
+composition fits, tagging diagnostics, and model convergence diagnostics. Any
+alternative composition-weighting methods or likelihood formulations considered
+during model development should be described in the sensitivity section.
 
 > **TODO:** Confirm the final likelihood components, data weights, CPUE
 > variances, tag likelihood settings, and any penalties or bounds used in the
@@ -164,15 +137,11 @@ and diagnostics before being carried forward.
 The model-run section should separate diagnostic or base models, stepwise model
 development, one-off sensitivities, and the structural uncertainty grid.
 
-The `r previous_assessment_year` assessment adopted extensive jittering and
-Hessian checks for the diagnostic model and structural uncertainty grid because
-some stepwise models were found to sit at sub-optimal local minima. Grid models
-were jittered and the best solution was selected by objective function value,
-with positive definite Hessian status treated as desirable but not the only
-criterion for management-use models. The `r assessment_year` model-run
-registry should therefore include objective function values, gradients, Hessian
-status, jitter counts, restart notes, and any evidence that key management
-quantities are stable.
+The `r assessment_year` model-run registry should include objective function
+values, gradients, Hessian status, jitter counts, restart notes, and evidence
+that key management quantities are stable. If a model is retained despite a
+non-positive-definite Hessian or related warning, the report should explain the
+diagnostic evidence supporting that decision.
 
 > **TODO:** List the final diagnostic model, sensitivity runs, uncertainty axes,
 > and model-weighting approach. Model registries are inserted in the Tables
@@ -194,14 +163,10 @@ mortality reference quantities are derived from yield analysis, including
 $F_{recent}/F_{MSY}$, and dynamic Kobe or Majuro plots can be produced by
 repeating the yield calculations through time [@kleiber_multifan-cl_2019].
 
-For comparison, the `r previous_assessment_year` report calculated
-$SB_{F=0}$ over 2012-2021, recent spawning potential over 2018-2021, and
-recent fishing mortality over 2017-2020. It excluded 2021 from the recent
-fishing-mortality average because terminal-year fishing mortality and data
-inputs were considered uncertain. The `r assessment_year` report should state
-the updated no-fishing reference period, recent-depletion period, recent
-fishing-mortality period, and any management objective against which stock
-status is interpreted.
+The `r assessment_year` report should state the no-fishing reference period,
+recent-depletion period, recent fishing-mortality period, and any management
+objective against which stock status is interpreted. If terminal years are
+excluded from recent averages, the reason should be stated explicitly.
 
 > **TODO:** Update the no-fishing reference period, recent-period definition,
 > target or management objective text, yield-analysis settings, and projection
