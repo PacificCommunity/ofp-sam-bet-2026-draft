@@ -1,10 +1,12 @@
 # BET 2026 Report Source
 
-![Report status: draft scaffold](https://img.shields.io/badge/report%20status-draft%20scaffold-f59e0b)
+![Report status: NOT FINAL draft scaffold](https://img.shields.io/badge/report%20status-NOT%20FINAL%20draft%20scaffold-d97706)
 ![Generated inputs: placeholders](https://img.shields.io/badge/generated%20inputs-placeholder%20figures%20%26%20captions-64748b)
 
-> **Current status:** this folder is a draft report scaffold, not the final
-> 2026 assessment report. Many figures, tables, captions, and narrative blocks
+> [!WARNING]
+> **Draft scaffold, not the final 2026 assessment report.**
+> This folder is not yet the final assessment report. Many figures, tables,
+> captions, and narrative blocks
 > are generated placeholders or review seeds from the current workflow. Treat
 > them as material to check, edit, replace, or remove before release. When the
 > assessment is finalized, update this badge and note to mark the folder as the
