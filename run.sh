@@ -272,6 +272,31 @@ publish_generated_report_inputs() {
     return 0
   fi
 
+  local changed_paths
+  changed_paths="$(
+    git diff --cached --name-status -- "${stage_paths[@]}" |
+      awk -F '\t' '
+        BEGIN { limit = 80 }
+        {
+          total++
+          if (total > limit) next
+          status = $1
+          label = status
+          if (status == "A") label = "added"
+          else if (status == "M") label = "modified"
+          else if (status == "D") label = "removed"
+          else if (status ~ /^R/) label = "renamed"
+          else if (status ~ /^C/) label = "copied"
+          if (NF >= 3) print "- " label ": " $2 " -> " $3
+          else print "- " label ": " $2
+        }
+        END {
+          if (total > limit) print "- ... " (total - limit) " more changed path(s)"
+          if (total == 0) print "- no path-level changes detected"
+        }
+      '
+  )"
+
   local report_job="manual"
   if [[ -n "${KFLOW_JOB_ID:-}${KFLOW_JOB_NUMBER:-}" ]]; then
     report_job="$(kflow_job_ref "${KFLOW_JOB_ID:-}" "${KFLOW_JOB_NUMBER:-}")"
@@ -292,14 +317,8 @@ Kflow:
 - upstream lineage: ${lineage_jobs:-unknown}
 - branch: ${branch}
 
-Generated paths:
-- ${REPORT_DIR}/generated/outputs/report-ready/figures.qmd
-- ${REPORT_DIR}/generated/outputs/report-ready/tables.qmd
-- ${REPORT_DIR}/generated/outputs/figures
-- ${REPORT_DIR}/generated/outputs/tables
-- ${REPORT_DIR}/pipeline-inputs
-- ${REPORT_DIR}/sections/Figures.qmd
-- ${REPORT_DIR}/sections/Tables.qmd
+Changed generated inputs:
+${changed_paths}
 EOF
   )
   git commit -m "$subject" -m "$body"
