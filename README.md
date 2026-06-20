@@ -2,7 +2,7 @@
 
 This repository contains the BET 2026 report source in `bet-2026-report/`.
 The report is set up for automated insertion of
-curated report-ready figures and tables from the BET 2026 assessment workflow,
+report-ready figures and tables from the BET 2026 assessment workflow,
 while leaving interpretation, final values, and management advice clearly
 marked for analyst review.
 
@@ -25,30 +25,32 @@ rather than copying this BET-specific draft.
 
 When rendered from a model workflow, selected upstream registry and summary
 files are copied into `pipeline-inputs/`, and report-ready figures are copied
-into `Figures/generated/`. The report can also be rendered directly if those
-files already exist.
+into `generated/outputs/` and `Figures/generated/`. The report can also be
+rendered directly if those files already exist.
 
 `bet-2026-report/bet-2026.qmd` is kept only as a compatibility entrypoint for
 older BET jobs. New renders should use
 `bet-2026-report/assessment-report.qmd`.
 
-## Report Curation
+## Output Sections
 
-The outputs task creates the broad figure/table bundle. The curation task then
-selects and orders the generated assets and writes report-ready QMD sections.
-This report task consumes those curated sections. When curated QMD is present in
-the Kflow input artifact, it is copied into `bet-2026-report/sections/` and
-used in preference to the automatic catalogs.
+The outputs task creates the broad figure/table bundle and writes report-ready
+QMD seeds:
 
-Each render writes `outputs/curation/report-curation-review.html` and
-`outputs/curation/figure-caption-draft.qmd`. Open the review page first. For
-small edits, update `catalog/curation.yml` with `placement`, `section`, `title`,
-or `caption_override`. For hands-on report editing, copy
-`figure-caption-draft.qmd` to `bet-2026-report/sections/Figures_manual.qmd`,
-edit the QMD captions or order directly, and set `manual_figures_qmd` in
-`bet-2026-report/report-config.yml`. The next render will use that QMD Figures
-section instead of the automatic figure catalog. See
-`bet-2026-report/vignettes/report-curation.md` for the beginner workflow.
+- `generated/outputs/report-ready/figures.qmd`
+- `generated/outputs/report-ready/tables.qmd`
+- `generated/outputs/report-ready/report-map.html`
+
+During a Kflow report render, `R/prepare_report_inputs.R` copies the outputs
+bundle into `bet-2026-report/generated/outputs/`. If `sections/Figures.qmd` or
+`sections/Tables.qmd` is missing, or still contains the initial
+`kflow-section-seed` placeholder, it is seeded from the generated QMD. Once the
+section has been seeded, edit the section directly to include, remove, reorder,
+or rewrite captions. Later renders preserve existing section files.
+
+Open `outputs/generated/outputs/report-ready/report-map.html` from a report job,
+or `outputs/report-ready/report-map.html` from an outputs job, to browse the
+generated figure/table map before editing the QMD.
 
 For file size, plot jobs create optimized PNGs for PDF output and WebP sidecars
 for HTML output. The report automatically uses JPEG sidecars for PDF when they
@@ -56,6 +58,6 @@ are smaller, WebP sidecars for HTML when available, and the original optimized
 PNG as the fallback.
 
 Each Kflow render writes `outputs/provenance/report-provenance.csv`, including
-the curation input job id, upstream output job ids, curation repo commit, and
-report repo commit. This replaces the need for git submodules while keeping the
-artifact chain reproducible.
+the report job id, upstream output job ids, copied output bundle, Kflow lineage,
+and report repo commit. This replaces the need for git submodules while keeping
+the artifact chain reproducible.

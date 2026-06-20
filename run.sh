@@ -155,11 +155,6 @@ prepare_runtime_packages
 Rscript R/prepare_report_inputs.R
 
 cd "${REPORT_DIR}"
-if [[ -f "sections/Figures_curated.qmd" || -f "sections/Tables_curated.qmd" ]]; then
-  echo "Curated QMD sections detected; skipping legacy report curation review."
-else
-  Rscript R/figure_curation.R review
-fi
 quarto render "${REPORT_QMD}" --to html --output "${REPORT_FILE_STEM}.html"
 quarto render "${REPORT_QMD}" --to pdf --output "${REPORT_FILE_STEM}.pdf"
 cd "${ROOT}"
@@ -275,32 +270,11 @@ copy_file <- function(from, to) {
   file.copy(from, to, overwrite = TRUE)
 }
 
-url_path <- function(path) {
-  gsub(" ", "%20", gsub("\\\\", "/", path))
-}
-
 copy_figure_for_output <- function(file, folder) {
   if (!file.exists(file)) return("")
   to <- file.path(folder, basename(file))
   copy_file(file, to)
   to
-}
-
-rewrite_curation_review_links <- function(out, replacements) {
-  if (!is.data.frame(replacements) || !nrow(replacements)) return(invisible(FALSE))
-  html_files <- file.path(out, "curation", c("report-curation-review.html", "figure-curation-review.html"))
-  html_files <- html_files[file.exists(html_files)]
-  for (html_file in html_files) {
-    text <- readLines(html_file, warn = FALSE)
-    for (i in seq_len(nrow(replacements))) {
-      from <- replacements$from[[i]]
-      to <- replacements$to[[i]]
-      text <- gsub(from, to, text, fixed = TRUE)
-      text <- gsub(url_path(from), url_path(to), text, fixed = TRUE)
-    }
-    writeLines(text, html_file)
-  }
-  invisible(TRUE)
 }
 
 match_index_row <- function(index, file, id_col) {
@@ -323,10 +297,8 @@ match_index_row <- function(index, file, id_col) {
 out <- env("OUTPUT_DIR", "outputs")
 report_dir <- env("REPORT_DIR", "bet-2026-report")
 report_file_stem <- env("REPORT_FILE_STEM", "bet-2026-report")
-has_curated_qmd <- file.exists(file.path(report_dir, "sections", "Figures_curated.qmd")) ||
-  file.exists(file.path(report_dir, "sections", "Tables_curated.qmd"))
 
-dirs <- file.path(out, c("final-report", "figures", "tables", "indices", "provenance"))
+dirs <- file.path(out, c("final-report", "figures", "tables", "indices", "provenance", "generated"))
 unlink(dirs, recursive = TRUE, force = TRUE)
 dir.create(out, recursive = TRUE, showWarnings = FALSE)
 invisible(lapply(dirs, dir.create, recursive = TRUE, showWarnings = FALSE))
@@ -337,24 +309,22 @@ for (file in final_files) {
   copy_file(file, file.path(out, "final-report", basename(file)))
 }
 
-curation_dir <- file.path(report_dir, "curation")
-if (!has_curated_qmd && dir.exists(curation_dir)) {
-  curation_files <- list.files(curation_dir, recursive = TRUE, full.names = TRUE)
-  for (file in curation_files) {
-    rel <- sub(paste0("^", gsub("([][{}()+*^$|\\\\?.])", "\\\\\\1", curation_dir), "/?"), "", file)
-    copy_file(file, file.path(out, "curation", rel))
-  }
-}
-curation_catalog <- file.path(report_dir, "catalog", "curation.yml")
-if (!has_curated_qmd && file.exists(curation_catalog)) {
-  copy_file(curation_catalog, file.path(out, "curation", basename(curation_catalog)))
-}
-
 pipeline_dir <- file.path(report_dir, "pipeline-inputs")
 if (dir.exists(pipeline_dir)) {
   provenance_files <- list.files(pipeline_dir, pattern = "provenance[.](csv|json)$", full.names = TRUE, ignore.case = TRUE)
   for (file in provenance_files) {
     copy_file(file, file.path(out, "provenance", basename(file)))
+  }
+}
+
+generated_outputs_dir <- file.path(report_dir, "generated", "outputs")
+if (dir.exists(generated_outputs_dir)) {
+  generated_files <- list.files(generated_outputs_dir, recursive = TRUE, full.names = TRUE)
+  for (file in generated_files) {
+    rel <- sub(paste0("^", gsub("([][{}()+*^$|\\\\?.])", "\\\\\\1", generated_outputs_dir), "/?"), "", file)
+    if (grepl("^(report-ready/|figure-index[.]csv$|table-index[.]csv$|plot-summary[.]csv$)", rel, ignore.case = TRUE)) {
+      copy_file(file, file.path(out, "generated", "outputs", rel))
+    }
   }
 }
 
@@ -382,7 +352,6 @@ figure_files <- if (dir.exists(figure_dir)) {
   character()
 }
 figure_files <- figure_files[!is_default_excluded_figure(figure_files)]
-review_replacements <- data.frame(from = character(), to = character(), stringsAsFactors = FALSE)
 for (file in figure_files) {
   row <- match_index_row(figure_index, file, "figure")
   id <- if (nrow(row) && "figure" %in% names(row) && nzchar(as.character(row$figure[[1]]))) {
@@ -391,27 +360,9 @@ for (file in figure_files) {
     slug(tools::file_path_sans_ext(basename(file)))
   }
   folder <- file.path(out, "figures", id)
-  copied <- copy_figure_for_output(file, folder)
-  if (nzchar(copied)) {
-    target <- file.path("..", "figures", id, basename(copied))
-    source_stem <- tools::file_path_sans_ext(basename(file))
-    review_replacements <- rbind(
-      review_replacements,
-      data.frame(
-        from = c(
-          file.path("..", "Figures", "generated", basename(file)),
-          file.path("..", "Figures", "generated", paste0(source_stem, ".webp")),
-          file.path("..", "Figures", "generated", paste0(source_stem, ".jpg")),
-          file.path("..", "Figures", "generated", paste0(source_stem, ".jpeg"))
-        ),
-        to = target,
-        stringsAsFactors = FALSE
-      )
-    )
-  }
+  copy_figure_for_output(file, folder)
   write_sidecar(folder, row, "caption")
 }
-rewrite_curation_review_links(out, review_replacements)
 
 table_dirs <- c(file.path(report_dir, "tables", "generated"), file.path(report_dir, "tables"), file.path(report_dir, "Tables"))
 table_files <- unlist(lapply(table_dirs[dir.exists(table_dirs)], function(dir) {
@@ -443,7 +394,7 @@ summary <- data.frame(
   type = ifelse(
     grepl("^final-report/.*[.](html|pdf)$", files, ignore.case = TRUE),
     "final-report",
-    ifelse(grepl("^curation/", files), "curation",
+    ifelse(grepl("^generated/", files), "generated",
     ifelse(grepl("^provenance/", files), "provenance",
       ifelse(grepl("^figures/", files), "figure",
       ifelse(grepl("^tables/", files), "table", "index")
@@ -460,5 +411,5 @@ message("Organized report outputs under ", out, ": ",
         length(unique(dirname(summary$output[summary$type == "figure"]))), " figure folders, ",
         length(unique(dirname(summary$output[summary$type == "table"]))), " table folders, ",
         sum(summary$type == "provenance"), " provenance files, ",
-        sum(summary$type == "curation"), " curation files.")
+        sum(summary$type == "generated"), " generated-map files.")
 RS

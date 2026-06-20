@@ -28,6 +28,23 @@ copy_unique <- function(files, dest) {
   copied
 }
 
+copy_tree <- function(source, dest) {
+  if (!nzchar(source) || !dir.exists(source)) return(character())
+  files <- list.files(source, recursive = TRUE, full.names = TRUE, all.files = FALSE, no.. = TRUE)
+  files <- files[file.exists(files) & !dir.exists(files)]
+  if (!length(files)) return(character())
+  copied <- character()
+  source_norm <- normalizePath(source, winslash = "/", mustWork = FALSE)
+  for (file in files) {
+    rel <- sub(paste0("^", regex_escape(source_norm), "/?"), "", normalizePath(file, winslash = "/", mustWork = FALSE))
+    target <- file.path(dest, rel)
+    dir.create(dirname(target), recursive = TRUE, showWarnings = FALSE)
+    file.copy(file, target, overwrite = TRUE)
+    copied <- c(copied, target)
+  }
+  copied
+}
+
 read_csv_safe <- function(path) {
   tryCatch(utils::read.csv(path, stringsAsFactors = FALSE, check.names = FALSE), error = function(e) data.frame())
 }
@@ -144,29 +161,40 @@ update_report_config <- function(path) {
   invisible(TRUE)
 }
 
-set_report_config_value <- function(path, name, value) {
-  if (!file.exists(path) || !nzchar(value)) return(invisible(FALSE))
-  lines <- readLines(path, warn = FALSE)
-  rendered <- paste0(name, ": \"", value, "\"")
-  hit <- grepl(paste0("^", name, "\\s*:"), lines)
-  if (any(hit)) {
-    lines[which(hit)[[1]]] <- rendered
-  } else {
-    lines <- c(lines, rendered)
-  }
-  writeLines(lines, path)
-  invisible(TRUE)
+find_outputs_bundle <- function(input_root) {
+  if (!dir.exists(input_root)) return("")
+  dirs <- list.dirs(input_root, recursive = TRUE, full.names = TRUE)
+  dirs <- dirs[file.exists(file.path(dirs, "report-ready", "figures.qmd")) |
+    file.exists(file.path(dirs, "report-ready", "tables.qmd"))]
+  if (!length(dirs)) return("")
+  file_counts <- vapply(dirs, function(dir) length(list.files(dir, recursive = TRUE, full.names = TRUE)), integer(1))
+  dirs[order(file_counts, decreasing = TRUE)[[1]]]
 }
 
-copy_curated_section <- function(all_files, input_root, report_path, name) {
-  pattern <- paste0("(^|/)(report|draft)/sections/", name, "[.]qmd$")
-  source <- all_files[grepl(pattern, all_files, ignore.case = TRUE)]
-  source <- source[file.exists(source)]
-  if (!length(source)) return("")
-  target <- file.path(report_path, "sections", paste0(name, "_curated.qmd"))
+seed_report_section <- function(report_path, name, source) {
+  if (!file.exists(source)) return("missing-source")
+  target <- file.path(report_path, "sections", paste0(name, ".qmd"))
+  existing <- if (file.exists(target)) readLines(target, warn = FALSE) else character()
+  should_seed <- !file.exists(target) || any(grepl("kflow-section-seed", existing, fixed = TRUE))
+  if (!isTRUE(should_seed)) return("preserved")
   dir.create(dirname(target), recursive = TRUE, showWarnings = FALSE)
-  file.copy(source[[1]], target, overwrite = TRUE)
-  paste0("sections/", basename(target))
+  file.copy(source, target, overwrite = TRUE)
+  "seeded"
+}
+
+read_kflow_provenance <- function(path) {
+  if (!file.exists(path) || !requireNamespace("jsonlite", quietly = TRUE)) return(list())
+  tryCatch(jsonlite::fromJSON(path, simplifyDataFrame = TRUE), error = function(e) list())
+}
+
+provenance_lineage_table <- function(provenance) {
+  lineage <- provenance$lineage
+  if (is.null(lineage)) return(data.frame())
+  if (is.data.frame(lineage)) return(lineage)
+  if (is.list(lineage) && length(lineage)) {
+    return(bind_rows_fill(lapply(lineage, function(x) as.data.frame(x, stringsAsFactors = FALSE))))
+  }
+  data.frame()
 }
 
 root <- getwd()
@@ -179,14 +207,29 @@ if (!dir.exists(report_path)) stop("Report directory not found: ", report_path, 
 figure_dest <- file.path(report_path, "Figures", "generated")
 table_dest <- file.path(report_path, "tables", "generated")
 pipeline_dest <- file.path(report_path, "pipeline-inputs")
-unlink(c(figure_dest, table_dest, pipeline_dest), recursive = TRUE, force = TRUE)
+generated_outputs_dest <- file.path(report_path, "generated", "outputs")
+unlink(c(figure_dest, table_dest, pipeline_dest, generated_outputs_dest), recursive = TRUE, force = TRUE)
 dir.create(figure_dest, recursive = TRUE, showWarnings = FALSE)
 dir.create(table_dest, recursive = TRUE, showWarnings = FALSE)
 dir.create(pipeline_dest, recursive = TRUE, showWarnings = FALSE)
+dir.create(generated_outputs_dest, recursive = TRUE, showWarnings = FALSE)
 
 input_root <- resolve_path(input_dir, root)
 all_files <- if (dir.exists(input_root)) list.files(input_root, recursive = TRUE, full.names = TRUE) else character()
 if (!length(all_files)) warning("No Kflow input artifact files found at ", input_root)
+
+outputs_bundle <- find_outputs_bundle(input_root)
+copied_generated_outputs <- copy_tree(outputs_bundle, generated_outputs_dest)
+figures_section_status <- seed_report_section(
+  report_path,
+  "Figures",
+  file.path(generated_outputs_dest, "report-ready", "figures.qmd")
+)
+tables_section_status <- seed_report_section(
+  report_path,
+  "Tables",
+  file.path(generated_outputs_dest, "report-ready", "tables.qmd")
+)
 
 figure_files <- all_files[grepl("[.](png|jpg|jpeg|webp|pdf)$", all_files, ignore.case = TRUE)]
 table_files <- all_files[grepl("[.]csv$", all_files, ignore.case = TRUE)]
@@ -220,23 +263,35 @@ if (nrow(summaries)) utils::write.csv(summaries, file.path(pipeline_dest, "repor
 
 input_job_ids <- top_level_input_job_ids(input_root)
 upstream_provenance <- bind_rows_fill(lapply(provenance_files, read_csv_safe))
-curation_job_ids <- collapse_metadata(c(env("CURATION_JOB_ID", ""), input_job_ids))
 outputs_job_ids <- collapse_metadata(c(
   env("OUTPUTS_JOB_IDS", ""),
   env("OUTPUTS_JOB_ID", ""),
   metadata_field(upstream_provenance, c("outputs_job_ids", "upstream_job_ids"))
 ))
+kflow_provenance_file <- env("KFLOW_PROVENANCE_FILE", file.path(input_root, "kflow-provenance.json"))
+if (file.exists(kflow_provenance_file)) {
+  file.copy(kflow_provenance_file, file.path(pipeline_dest, "kflow-provenance.json"), overwrite = TRUE)
+}
+kflow_provenance <- read_kflow_provenance(kflow_provenance_file)
+kflow_lineage <- provenance_lineage_table(kflow_provenance)
+if (nrow(kflow_lineage)) {
+  utils::write.csv(kflow_lineage, file.path(pipeline_dest, "kflow-lineage.csv"), row.names = FALSE)
+}
 report_provenance <- data.frame(
   stage = "report",
   generated_at_utc = format(Sys.time(), "%Y-%m-%dT%H:%M:%SZ", tz = "UTC"),
+  report_job_id = env("KFLOW_JOB_ID", ""),
   report_input_job_ids = collapse_metadata(input_job_ids),
-  curation_job_ids = curation_job_ids,
   outputs_job_ids = outputs_job_ids,
-  curation_repo_commit = collapse_metadata(metadata_field(upstream_provenance, "curation_repo_commit")),
-  curation_repo_remote = collapse_metadata(metadata_field(upstream_provenance, "curation_repo_remote")),
+  outputs_bundle = if (nzchar(outputs_bundle)) relative_to_input(outputs_bundle, input_root) else "",
+  generated_outputs_files = length(copied_generated_outputs),
+  figures_section = figures_section_status,
+  tables_section = tables_section_status,
+  kflow_lineage_job_ids = if (nrow(kflow_lineage) && "job_id" %in% names(kflow_lineage)) collapse_metadata(kflow_lineage$job_id) else "",
+  kflow_lineage_tasks = if (nrow(kflow_lineage) && "task" %in% names(kflow_lineage)) collapse_metadata(kflow_lineage$task) else "",
   report_repo_commit = git_metadata(c("rev-parse", "HEAD"), root),
   report_repo_remote = git_metadata(c("config", "--get", "remote.origin.url"), root),
-  upstream_provenance_files = collapse_metadata(relative_to_input(provenance_files, input_root)),
+  upstream_provenance_files = collapse_metadata(c(relative_to_input(provenance_files, input_root), basename(kflow_provenance_file))),
   copied_figures = length(copied_figures),
   copied_tables = length(copied_tables),
   figure_index_rows = nrow(figure_index),
@@ -274,12 +329,5 @@ prep_summary <- data.frame(
 utils::write.csv(prep_summary, file.path(pipeline_dest, "report-prep-summary.csv"), row.names = FALSE)
 
 update_report_config(file.path(report_path, "report-config.yml"))
-manual_figures_qmd <- copy_curated_section(all_files, input_root, report_path, "Figures")
-manual_tables_qmd <- copy_curated_section(all_files, input_root, report_path, "Tables")
-if (nzchar(manual_figures_qmd)) {
-  set_report_config_value(file.path(report_path, "report-config.yml"), "manual_figures_qmd", manual_figures_qmd)
-}
-if (nzchar(manual_tables_qmd)) {
-  set_report_config_value(file.path(report_path, "report-config.yml"), "manual_tables_qmd", manual_tables_qmd)
-}
 message("Prepared report inputs: ", length(copied_figures), " figures, ", length(copied_tables), " tables.")
+message("Report sections: Figures=", figures_section_status, ", Tables=", tables_section_status, ".")

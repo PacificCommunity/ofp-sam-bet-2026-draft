@@ -1,121 +1,70 @@
-# Curating BET 2026 Report Figures And Tables
+# Editing Generated Figures And Tables
 
-This report is designed so the computer does the bulk insertion work, then a
-human makes the final editorial choices.
+The current BET workflow does not use a separate curation task. The outputs task
+creates the figure/table bundle and the report task copies it into the report.
 
-## Mental Model
+## What The Outputs Job Provides
 
-The BET workflow has two separate jobs:
-
-1. The plot task creates as many report-ready figures and tables as it can.
-2. The report task decides where those files appear in the draft.
-
-That means you usually do not need to rerun the plot task just to move a figure,
-move a table, exclude something, or improve a caption. Edit the report curation
-files, then rerun the report task.
-
-## Recommended Workflow
-
-1. Open the review page from the report output:
+After `ofp-sam-bet-2026-outputs` runs, open:
 
 ```text
-outputs/curation/report-curation-review.html
+outputs/report-ready/report-map.html
 ```
 
-2. Decide which figures belong in the main report, appendix, or excluded set.
-3. Choose one editing style:
+That read-only map shows every generated figure and table, the default section
+placement, the item id, and the marker to search for in QMD.
 
-- For small changes, edit `catalog/curation.yml`.
-- For full manual caption and ordering control, edit a QMD figure draft.
-
-4. Rerun only the report task. The plot task does not need to run again unless
-   the figure files themselves changed.
-
-## Small Edits: Curation YAML
-
-Use `catalog/curation.yml` when you only need to move, exclude, retitle, or
-override the caption for selected items:
-
-```yaml
-catalog/curation.yml
-```
-
-The file has two sections:
-
-```yaml
-figures:
-  - target_type: key
-    target: spawning-biomass
-    placement: main
-    caption_override: "Spawning biomass trajectory for the diagnostic model set."
-
-tables:
-  - target_type: file
-    target: model-summary.csv
-    placement: appendix
-```
-
-Use `placement` to choose where an item goes:
-
-- `main`: put it in the main report.
-- `appendix`: move it to the supplemental appendix.
-- `exclude`: leave it out of the report.
-
-Use `target_type` to choose how the item is matched:
-
-- `key`: match a row in `catalog/figures.csv` or `catalog/tables.csv`.
-- `file`: match a generated filename, such as `foo.png` or `bar.csv`.
-
-Optional fields:
-
-- `section`: section heading for promoted generated assets.
-- `title`: subsection title printed above the asset.
-- `caption_override`: final human-written caption.
-- `order`: numeric order within curated rows.
-- `notes`: reviewer notes; these do not print in the report.
-
-## Full Caption Edits: QMD Sections
-
-Every report render also writes:
+The same outputs job also writes:
 
 ```text
-outputs/curation/figure-caption-draft.qmd
+outputs/report-ready/figures.qmd
+outputs/report-ready/tables.qmd
 ```
 
-This file is a plain Quarto section containing the generated figure blocks and the
-current captions. It is useful when you want to read the selected figures in
-report order and edit the caption text directly.
+These are generated seeds, not the final hand-edited report source.
 
-To use it:
+## What The Report Job Does
 
-1. Copy `outputs/curation/figure-caption-draft.qmd` to:
-
-```yaml
-bet-2026-report/sections/Figures_manual.qmd
-```
-
-2. Edit the headings, order, and caption text in `Figures_manual.qmd`.
-3. Set this in `bet-2026-report/report-config.yml`:
-
-```yaml
-manual_figures_qmd: "sections/Figures_manual.qmd"
-```
-
-4. Rerun the report task.
-
-When `manual_figures_qmd` is blank, the report uses automatic catalog insertion.
-When it points to a non-empty QMD file, that QMD is used for the Figures section
-instead. This lets a human fully control report wording without changing R code.
-
-## Review Aids
-
-The curation output folder also contains:
+When `ofp-sam-bet-2026-report` runs, it copies the outputs bundle into:
 
 ```text
-outputs/curation/figure-curation-template.csv
-outputs/curation/table-curation-template.csv
-outputs/curation/curation-template.yml
+bet-2026-report/generated/outputs/
 ```
 
-These are review aids. Do not treat them as the final source of truth unless you
-copy their contents into `catalog/curation.yml` or the manual QMD file.
+Then it checks:
+
+```text
+bet-2026-report/sections/Figures.qmd
+bet-2026-report/sections/Tables.qmd
+```
+
+If a section file is missing, or still has the initial `kflow-section-seed`
+placeholder, the report job seeds it from the generated QMD. If the section file
+already exists without that placeholder, the report job preserves it.
+
+## Normal Editing Workflow
+
+1. Run outputs.
+2. Open `outputs/report-ready/report-map.html`.
+3. Run report once to seed `sections/Figures.qmd` and `sections/Tables.qmd`.
+4. Edit those two section files directly.
+5. Commit the edited report repo.
+6. Rerun report. The edited sections are kept.
+
+To remove a figure or table, delete its block in the section QMD. To change
+order, move the block. To change wording, edit the caption inside the image
+markdown or the table chunk caption.
+
+If you want to regenerate a clean section from outputs, delete the section file
+and rerun the report job.
+
+## Reproducibility
+
+The report job writes:
+
+```text
+outputs/provenance/report-provenance.csv
+```
+
+That file records the report job id, upstream outputs job id, copied output
+bundle, Kflow lineage, and report repository commit.
