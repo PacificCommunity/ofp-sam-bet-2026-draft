@@ -1,10 +1,10 @@
 [
   {
     "stage": "report",
-    "generated_at_utc": "2026-06-20T22:06:34Z",
-    "report_job_id": "358bb0b68858",
-    "report_job_number": "251",
-    "report_job_ref": "Job 251 (358bb0b68858)",
+    "generated_at_utc": "2026-06-20T22:51:15Z",
+    "report_job_id": "28c2c7f3c03f",
+    "report_job_number": "252",
+    "report_job_ref": "Job 252 (28c2c7f3c03f)",
     "report_input_job_ids": "9ac639fad80d",
     "results_job_ids": "9ac639fad80d",
     "results_job_refs": "Job 248 (9ac639fad80d)",
@@ -18,7 +18,7 @@
     "kflow_lineage_job_numbers": "247,248",
     "kflow_lineage_job_refs": "Job 247 (93a84ab5fca3),Job 248 (9ac639fad80d)",
     "kflow_lineage_tasks": "ofp-sam-bet-2026-stepwise,ofp-sam-bet-2026-results",
-    "report_repo_commit": "3c4b4b38f5f59d444c683060b696e091ce5f6c3b",
+    "report_repo_commit": "399a1220c68edfc0acbee46a655745c73dc0cf35",
     "report_repo_remote": "https://github.com/PacificCommunity/ofp-sam-bet-2026-report.git",
     "upstream_provenance_files": "kflow-provenance.json",
     "copied_figures": 192,
