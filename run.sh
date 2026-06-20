@@ -155,7 +155,11 @@ prepare_runtime_packages
 Rscript R/prepare_report_inputs.R
 
 cd "${REPORT_DIR}"
-Rscript R/figure_curation.R review
+if [[ -f "sections/Figures_curated.qmd" || -f "sections/Tables_curated.qmd" ]]; then
+  echo "Curated QMD sections detected; skipping legacy draft curation review."
+else
+  Rscript R/figure_curation.R review
+fi
 quarto render "${REPORT_QMD}" --to html --output "${REPORT_FILE_STEM}.html"
 quarto render "${REPORT_QMD}" --to pdf --output "${REPORT_FILE_STEM}.pdf"
 cd "${ROOT}"
@@ -319,6 +323,8 @@ match_index_row <- function(index, file, id_col) {
 out <- env("OUTPUT_DIR", "outputs")
 report_dir <- env("REPORT_DIR", "bet-2026-report")
 report_file_stem <- env("REPORT_FILE_STEM", "bet-2026-draft")
+has_curated_qmd <- file.exists(file.path(report_dir, "sections", "Figures_curated.qmd")) ||
+  file.exists(file.path(report_dir, "sections", "Tables_curated.qmd"))
 
 dirs <- file.path(out, c("final-report", "figures", "tables", "indices"))
 unlink(dirs, recursive = TRUE, force = TRUE)
@@ -332,7 +338,7 @@ for (file in final_files) {
 }
 
 curation_dir <- file.path(report_dir, "curation")
-if (dir.exists(curation_dir)) {
+if (!has_curated_qmd && dir.exists(curation_dir)) {
   curation_files <- list.files(curation_dir, recursive = TRUE, full.names = TRUE)
   for (file in curation_files) {
     rel <- sub(paste0("^", gsub("([][{}()+*^$|\\\\?.])", "\\\\\\1", curation_dir), "/?"), "", file)
@@ -340,7 +346,7 @@ if (dir.exists(curation_dir)) {
   }
 }
 curation_catalog <- file.path(report_dir, "catalog", "curation.yml")
-if (file.exists(curation_catalog)) {
+if (!has_curated_qmd && file.exists(curation_catalog)) {
   copy_file(curation_catalog, file.path(out, "curation", basename(curation_catalog)))
 }
 
