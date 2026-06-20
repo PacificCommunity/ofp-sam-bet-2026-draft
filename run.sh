@@ -243,8 +243,9 @@ is_default_excluded_figure <- function(path) {
 
 write_sidecar <- function(folder, row, caption_field = "caption") {
   if (is.data.frame(row) && nrow(row)) {
-    if (caption_field %in% names(row)) {
-      row[[caption_field]] <- polish_output_caption(row[[caption_field]])
+    caption_cols <- grep("caption", names(row), ignore.case = TRUE, value = TRUE)
+    for (col in caption_cols) {
+      row[[col]] <- polish_output_caption(row[[col]])
     }
     utils::write.csv(row, file.path(folder, "metadata.csv"), row.names = FALSE)
     caption <- row[[caption_field]]
@@ -326,10 +327,9 @@ if (dir.exists(curation_dir)) {
     copy_file(file, file.path(out, "curation", rel))
   }
 }
-for (curation_catalog in file.path(report_dir, "catalog", c("curation.yml", "figure-curation.csv"))) {
-  if (file.exists(curation_catalog)) {
-    copy_file(curation_catalog, file.path(out, "curation", basename(curation_catalog)))
-  }
+curation_catalog <- file.path(report_dir, "catalog", "curation.yml")
+if (file.exists(curation_catalog)) {
+  copy_file(curation_catalog, file.path(out, "curation", basename(curation_catalog)))
 }
 
 figure_dir <- file.path(report_dir, "Figures", "generated")
@@ -343,8 +343,11 @@ if (file.exists(figure_index_path)) {
       figure_index <- figure_index[!excluded, , drop = FALSE]
     }
   }
-  if (is.data.frame(figure_index) && nrow(figure_index) && "caption" %in% names(figure_index)) {
-    figure_index$caption <- polish_output_caption(figure_index$caption)
+  if (is.data.frame(figure_index) && nrow(figure_index)) {
+    caption_cols <- grep("caption", names(figure_index), ignore.case = TRUE, value = TRUE)
+    for (col in caption_cols) {
+      figure_index[[col]] <- polish_output_caption(figure_index[[col]])
+    }
     utils::write.csv(figure_index, file.path(out, "indices", "figure-index.csv"), row.names = FALSE)
   } else {
     utils::write.csv(figure_index, file.path(out, "indices", "figure-index.csv"), row.names = FALSE)
