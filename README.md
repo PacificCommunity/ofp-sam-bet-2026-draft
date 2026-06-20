@@ -41,7 +41,7 @@ QMD seeds:
 - `generated/outputs/report-ready/tables.qmd`
 - `generated/outputs/report-ready/report-map.html`
 
-During a Kflow report render, `R/prepare_report_inputs.R` copies the outputs
+During a Kflow report render, `R/prepare_report_inputs.R` copies the results
 bundle into `bet-2026-report/generated/outputs/`. If `sections/Figures.qmd` or
 `sections/Tables.qmd` is missing, or still contains the initial
 `kflow-section-seed` placeholder, it is seeded from the generated QMD. Once the
@@ -69,12 +69,30 @@ Open `outputs/generated/outputs/report-ready/report-map.html` from a report job,
 or `outputs/report-ready/report-map.html` from a results job, to browse the
 generated figure/table map before editing the QMD.
 
-For file size, plot jobs create optimized PNGs for PDF output and WebP sidecars
+For file size, results jobs create optimized PNGs for PDF output and WebP sidecars
 for HTML output. The report automatically uses JPEG sidecars for PDF when they
 are smaller, WebP sidecars for HTML when available, and the original optimized
 PNG as the fallback.
 
 Each Kflow render writes `outputs/provenance/report-provenance.csv`, including
-the report job id, upstream output job ids, copied output bundle, Kflow lineage,
-and report repo commit. This replaces the need for git submodules while keeping
-the artifact chain reproducible.
+the report job id, upstream results job ids, copied results bundle, Kflow
+lineage, and report repo commit. This replaces the need for git submodules
+while keeping the artifact chain reproducible.
+
+## Common Job Config
+
+These fields are the useful ones to change from Kflow:
+
+| Field | Example | Meaning |
+| --- | --- | --- |
+| `RESULTS_JOB_ID` | `245` | Use one specific results job artifact. |
+| `RESULTS_JOB_IDS` | `245,250` | Use multiple results jobs when combining model sets. |
+| `REPORT_QMD` | `assessment-report.qmd` | Quarto entrypoint inside `bet-2026-report/`. |
+| `REPORT_FILE_STEM` | `bet-2026-report` | HTML/PDF output filename stem. |
+| `FLOW_GROUP` | `bet-2026-base` | Short label shared by the chain in Kflow. |
+| `JOB_TITLE` | `BET report` | Human title shown in Kflow. |
+| `FLOW_SPECIES` | `BET` | Species code written into `report-config.yml`. |
+| `FLOW_SPECIES_LABEL` | `bigeye tuna` | Species label written into `report-config.yml`. |
+| `FLOW_ASSESSMENT_YEAR` | `2026` | Assessment year written into `report-config.yml`. |
+| `KFLOW_REPORT_COMMIT_GENERATED` | `true` | Commit generated QMD/assets back to this repo. |
+| `KFLOW_REPORT_PUSH_GENERATED` | `true` | Push that generated-input commit after a successful render. |

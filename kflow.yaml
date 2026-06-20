@@ -15,6 +15,16 @@ exclude_machines:
   - nouofpcand19
 
 env:
+  JOB_TITLE: BET report
+  JOB_DESCRIPTION: Render the assessment report from generated BET results.
+  JOB_KEY: report
+  FLOW_GROUP: bet-2026-base
+  REPORT_DIR: bet-2026-report
+  REPORT_QMD: assessment-report.qmd
+  REPORT_FILE_STEM: bet-2026-report
+  FLOW_SPECIES: BET
+  FLOW_SPECIES_LABEL: bigeye tuna
+  FLOW_ASSESSMENT_YEAR: "2026"
   KFLOW_RUNTIME_REQUIRE_PRIVATE_PACKAGES: "true"
   KFLOW_RUNTIME_UPDATE: auto
   KFLOW_RUNTIME_PACKAGES: mfclshiny=PacificCommunity/mfclshiny@9bd29ff
@@ -23,13 +33,20 @@ env:
   KFLOW_REPORT_COMMIT_GENERATED: "true"
   KFLOW_REPORT_PUSH_GENERATED: "true"
   KFLOW_REPORT_PUBLISH_REQUIRED: "true"
+input_jobs:
+  - report: ofp-sam-bet-2026-results
+    latest: 1
 output_patterns:
   - outputs/**
 job_config:
   optional:
-    - RUN_LABEL
-    - JOB_TITLE
     - FLOW_GROUP
+    - JOB_TITLE
+    - JOB_DESCRIPTION
+    - JOB_KEY
+    - REPORT_DIR
+    - REPORT_QMD
+    - REPORT_FILE_STEM
     - FLOW_SPECIES
     - FLOW_SPECIES_LABEL
     - FLOW_ASSESSMENT_YEAR
@@ -37,8 +54,8 @@ job_config:
     - RESULTS_JOB_IDS
     - OUTPUTS_JOB_ID
     - OUTPUTS_JOB_IDS
-    - REPORT_QMD
-    - REPORT_FILE_STEM
+    - INPUT_DIR
+    - OUTPUT_DIR
     - KFLOW_RUNTIME_REQUIRE_PRIVATE_PACKAGES
     - KFLOW_RUNTIME_UPDATE
     - KFLOW_RUNTIME_PACKAGES
