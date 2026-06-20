@@ -39,10 +39,14 @@ uses `bet-2026-report/catalog/curation.yml` to decide which generated assets go
 in the main report, appendix, or excluded set.
 
 Each render writes `outputs/curation/report-curation-review.html` and
-`outputs/curation/figure-caption-draft.qmd`. Open the review page first. Use
-`catalog/curation.yml` for small placement/caption overrides, or use the QMD
-draft when the Figures section needs full manual caption and ordering control.
-See `bet-2026-report/vignettes/report-curation.md` for the beginner workflow.
+`outputs/curation/figure-caption-draft.qmd`. Open the review page first. For
+small edits, update `catalog/curation.yml` with `placement`, `section`, `title`,
+or `caption_override`. For hands-on report editing, copy
+`figure-caption-draft.qmd` to `bet-2026-report/sections/Figures_manual.qmd`,
+edit the QMD captions or order directly, and set `manual_figures_qmd` in
+`bet-2026-report/report-config.yml`. The next render will use that QMD Figures
+section instead of the automatic figure catalog. See
+`bet-2026-report/vignettes/report-curation.md` for the beginner workflow.
 
 For file size, plot jobs create optimized PNGs for PDF output and WebP sidecars
 for HTML output. The report automatically uses JPEG sidecars for PDF when they

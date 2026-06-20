@@ -231,6 +231,18 @@ polish_output_caption <- function(x) {
   ifelse(nzchar(x), paste0(toupper(substr(x, 1, 1)), substr(x, 2, nchar(x))), x)
 }
 
+polish_output_metadata <- function(x) {
+  if (!is.data.frame(x) || !nrow(x)) return(x)
+  text_cols <- unique(c(
+    grep("caption", names(x), ignore.case = TRUE, value = TRUE),
+    intersect(c("alt_text", "description"), names(x))
+  ))
+  for (col in text_cols) {
+    x[[col]] <- polish_output_caption(x[[col]])
+  }
+  x
+}
+
 is_default_excluded_figure <- function(path) {
   stem <- tools::file_path_sans_ext(tolower(basename(path)))
   stem <- gsub("_", "-", stem, fixed = TRUE)
@@ -243,10 +255,7 @@ is_default_excluded_figure <- function(path) {
 
 write_sidecar <- function(folder, row, caption_field = "caption") {
   if (is.data.frame(row) && nrow(row)) {
-    caption_cols <- grep("caption", names(row), ignore.case = TRUE, value = TRUE)
-    for (col in caption_cols) {
-      row[[col]] <- polish_output_caption(row[[col]])
-    }
+    row <- polish_output_metadata(row)
     utils::write.csv(row, file.path(folder, "metadata.csv"), row.names = FALSE)
     caption <- row[[caption_field]]
     if (!is.null(caption) && length(caption) && nzchar(as.character(caption[[1]]))) {
@@ -344,10 +353,7 @@ if (file.exists(figure_index_path)) {
     }
   }
   if (is.data.frame(figure_index) && nrow(figure_index)) {
-    caption_cols <- grep("caption", names(figure_index), ignore.case = TRUE, value = TRUE)
-    for (col in caption_cols) {
-      figure_index[[col]] <- polish_output_caption(figure_index[[col]])
-    }
+    figure_index <- polish_output_metadata(figure_index)
     utils::write.csv(figure_index, file.path(out, "indices", "figure-index.csv"), row.names = FALSE)
   } else {
     utils::write.csv(figure_index, file.path(out, "indices", "figure-index.csv"), row.names = FALSE)
