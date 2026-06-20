@@ -238,29 +238,42 @@ card_html <- function(rows) {
   vapply(seq_len(nrow(rows)), function(i) {
     row <- rows[i, , drop = FALSE]
     file <- clean_text(row$file[[1]])
+    status <- clean_text(row$status[[1]])
+    if (!nzchar(status)) status <- if (nzchar(file)) "included" else "missing"
     absolute_file <- if (nzchar(file)) file.path(getwd(), file) else ""
     if (identical(row$kind[[1]], "figure")) {
-      preview_file <- if (nzchar(absolute_file)) review_preview_file(absolute_file) else ""
-      src <- html_src_from_curation(preview_file)
-      preview <- if (nzchar(src) && grepl("[.](png|jpg|jpeg|svg|webp)$", preview_file, ignore.case = TRUE)) {
-        sprintf('<img src="%s" alt="">', html_escape(src))
-      } else if (nzchar(src)) {
-        sprintf('<a class="file-link" href="%s">Open file</a>', html_escape(src))
+      if (identical(status, "missing") && !nzchar(file)) {
+        preview <- '<span class="missing">Not generated in this run</span>'
       } else {
-        '<span class="missing">Missing file</span>'
+        preview_file <- if (nzchar(absolute_file)) review_preview_file(absolute_file) else ""
+        src <- html_src_from_curation(preview_file)
+        preview <- if (nzchar(src) && grepl("[.](png|jpg|jpeg|svg|webp)$", preview_file, ignore.case = TRUE)) {
+          sprintf('<img src="%s" alt="">', html_escape(src))
+        } else if (nzchar(src)) {
+          sprintf('<a class="file-link" href="%s">Open file</a>', html_escape(src))
+        } else {
+          '<span class="missing">Preview unavailable</span>'
+        }
       }
     } else {
-      preview <- table_preview_html(absolute_file)
+      preview <- if (identical(status, "missing") && !nzchar(file)) {
+        '<span class="missing">Not generated in this run</span>'
+      } else {
+        table_preview_html(absolute_file)
+      }
     }
     sprintf(
-      '<article class="card" data-kind="%s" data-placement="%s" data-search="%s"><div class="preview">%s</div><div class="meta"><span class="pill kind">%s</span><span class="pill %s">%s</span><span>%s</span></div><h2>%s</h2><p class="target">%s: %s</p><p class="caption">%s</p><p class="notes">%s</p></article>',
+      '<article class="card" data-kind="%s" data-placement="%s" data-status="%s" data-search="%s"><div class="preview">%s</div><div class="meta"><span class="pill kind">%s</span><span class="pill %s">%s</span><span class="pill status-%s">%s</span><span>%s</span></div><h2>%s</h2><p class="target">%s: %s</p><p class="caption">%s</p><p class="notes">%s</p></article>',
       html_escape(row$kind[[1]]),
       html_escape(row$placement[[1]]),
+      html_escape(status),
       html_escape(paste(row$kind, row$section, row$title, row$target, row$file, row$current_caption, row$notes, collapse = " ")),
       preview,
       html_escape(row$kind[[1]]),
       html_escape(row$placement[[1]]),
       html_escape(row$placement[[1]]),
+      html_escape(status),
+      html_escape(status),
       html_escape(row$section[[1]]),
       html_escape(row$title[[1]]),
       html_escape(row$target_type[[1]]),
@@ -276,6 +289,8 @@ write_review_html <- function(rows, path) {
   figure_count <- sum(rows$kind == "figure")
   table_count <- sum(rows$kind == "table")
   counts <- table(factor(rows$placement, levels = c("main", "appendix", "exclude")))
+  status_counts <- table(factor(rows$status, levels = c("included", "appendix", "excluded", "missing")))
+  available_count <- sum(rows$status != "missing")
   html <- c(
     "<!doctype html>",
     '<html lang="en">',
@@ -291,10 +306,11 @@ write_review_html <- function(rows, path) {
     ".toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:18px 0}.toolbar input{min-width:280px;flex:1;padding:12px 14px;border:1px solid #c9d9e4;border-radius:10px;background:white;font:inherit}",
     ".filter{border:1px solid #c9d9e4;background:white;border-radius:999px;padding:10px 13px;font-weight:800;color:#24465d;cursor:pointer}.filter.is-active{background:#143044;color:white;border-color:#143044}",
     ".summary{display:flex;gap:10px;flex-wrap:wrap}.stat{background:white;border:1px solid #d5e2ea;border-radius:10px;padding:10px 13px;font-weight:850}.stat small{display:block;color:#6b7f8d;font-weight:750}",
-    ".grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px}.card{background:white;border:1px solid #d5e2ea;border-radius:10px;box-shadow:0 8px 22px rgba(33,70,92,.07);overflow:hidden}.card[hidden]{display:none}",
+    ".grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px}.card{background:white;border:1px solid #d5e2ea;border-radius:10px;box-shadow:0 8px 22px rgba(33,70,92,.07);overflow:hidden}.card[data-status='missing']{background:#f8fbfd}.card[hidden]{display:none}",
     ".preview{height:220px;background:#e9f1f6;display:flex;align-items:center;justify-content:center;border-bottom:1px solid #d5e2ea;overflow:auto}.preview img{max-width:100%;max-height:100%;object-fit:contain}.missing,.file-link{font-weight:850;color:#60788b}",
     "table{border-collapse:collapse;background:white;font-size:11px;min-width:100%}th,td{border:1px solid #d5e2ea;padding:5px 6px;text-align:left;vertical-align:top;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}th{background:#f7fafc}",
     ".meta{display:flex;align-items:center;gap:8px;margin:12px 14px 0;color:#60788b;font-size:13px;font-weight:800;flex-wrap:wrap}.pill{border-radius:999px;padding:5px 9px;text-transform:uppercase;font-size:11px;letter-spacing:.04em}.pill.kind{background:#eaf3f8;color:#28556e}.pill.main{background:#e5f6ee;color:#19754e}.pill.appendix{background:#eef4ff;color:#2a5fa6}.pill.exclude{background:#fff0e9;color:#a04722}",
+    ".pill.status-included,.pill.status-appendix{background:#edf7f0;color:#24724e}.pill.status-excluded{background:#fff0e9;color:#a04722}.pill.status-missing{background:#eef4f8;color:#60788b}",
     "h2{font-size:18px;line-height:1.2;margin:10px 14px 6px}.target{margin:0 14px 10px;color:#597082;font-weight:750}.caption{margin:0 14px 12px;line-height:1.45}.notes{margin:0 14px 16px;color:#7c5b22;font-weight:700}",
     ".guide{background:#eaf5fb;border:1px solid #cbe0ec;border-radius:12px;padding:14px 16px;margin:0 0 18px;color:#24465d;line-height:1.45}.guide code{background:white;border:1px solid #d4e2eb;border-radius:6px;padding:1px 5px}",
     "</style>",
@@ -302,17 +318,17 @@ write_review_html <- function(rows, path) {
     "<body>",
     '<main class="shell">',
     "<header><div><h1>Report curation</h1><p class=\"sub\">Review generated figures and tables, then edit <code>catalog/curation.yml</code> for final placement and captions.</p></div>",
-    sprintf('<div class="summary"><div class="stat">%s<small>Figures</small></div><div class="stat">%s<small>Tables</small></div><div class="stat">%s<small>Main</small></div><div class="stat">%s<small>Appendix</small></div><div class="stat">%s<small>Excluded</small></div></div>',
-            figure_count, table_count, counts[["main"]] %||% 0, counts[["appendix"]] %||% 0, counts[["exclude"]] %||% 0),
+    sprintf('<div class="summary"><div class="stat">%s<small>Figures</small></div><div class="stat">%s<small>Tables</small></div><div class="stat">%s<small>Available</small></div><div class="stat">%s<small>Main</small></div><div class="stat">%s<small>Appendix</small></div><div class="stat">%s<small>Needs source</small></div></div>',
+            figure_count, table_count, available_count, counts[["main"]] %||% 0, counts[["appendix"]] %||% 0, status_counts[["missing"]] %||% 0),
     "</header>",
     '<section class="guide">Most report items come from the catalogs automatically. Use <code>target_type: key</code> for a catalog row or <code>target_type: file</code> for a generated filename, then set <code>placement</code> to <code>main</code>, <code>appendix</code>, or <code>exclude</code>. Optional <code>section</code>, <code>title</code>, <code>caption_override</code>, and <code>order</code> values let a human make final report edits without touching R code.</section>',
-    '<div class="toolbar"><input id="search" type="search" placeholder="Search title, file, section, caption..."><button class="filter is-active" data-filter-kind="all" data-filter-placement="all">All</button><button class="filter" data-filter-kind="figure" data-filter-placement="all">Figures</button><button class="filter" data-filter-kind="table" data-filter-placement="all">Tables</button><button class="filter" data-filter-kind="all" data-filter-placement="main">Main</button><button class="filter" data-filter-kind="all" data-filter-placement="appendix">Appendix</button><button class="filter" data-filter-kind="all" data-filter-placement="exclude">Excluded</button></div>',
+    '<div class="toolbar"><input id="search" type="search" placeholder="Search title, file, section, caption..."><button class="filter is-active" data-filter-kind="all" data-filter-placement="all" data-filter-status="available">Available</button><button class="filter" data-filter-kind="all" data-filter-placement="all" data-filter-status="all">All</button><button class="filter" data-filter-kind="figure" data-filter-placement="all" data-filter-status="available">Figures</button><button class="filter" data-filter-kind="table" data-filter-placement="all" data-filter-status="available">Tables</button><button class="filter" data-filter-kind="all" data-filter-placement="main" data-filter-status="available">Main</button><button class="filter" data-filter-kind="all" data-filter-placement="appendix" data-filter-status="available">Appendix</button><button class="filter" data-filter-kind="all" data-filter-placement="exclude" data-filter-status="all">Excluded</button><button class="filter" data-filter-kind="all" data-filter-placement="all" data-filter-status="missing">Needs source</button></div>',
     '<section class="grid" id="grid">',
     card_html(rows),
     "</section>",
     "</main>",
     "<script>",
-    "const search=document.querySelector('#search');const buttons=[...document.querySelectorAll('.filter')];const cards=[...document.querySelectorAll('.card')];let kind='all';let placement='all';function sync(){const q=(search.value||'').toLowerCase().trim();cards.forEach(card=>{const okKind=kind==='all'||card.dataset.kind===kind;const okPlacement=placement==='all'||card.dataset.placement===placement;const okSearch=!q||(card.dataset.search||'').toLowerCase().includes(q);card.hidden=!(okKind&&okPlacement&&okSearch);});}buttons.forEach(btn=>btn.addEventListener('click',()=>{kind=btn.dataset.filterKind;placement=btn.dataset.filterPlacement;buttons.forEach(b=>b.classList.toggle('is-active',b===btn));sync();}));search.addEventListener('input',sync);",
+    "const search=document.querySelector('#search');const buttons=[...document.querySelectorAll('.filter')];const cards=[...document.querySelectorAll('.card')];let kind='all';let placement='all';let status='available';function sync(){const q=(search.value||'').toLowerCase().trim();cards.forEach(card=>{const okKind=kind==='all'||card.dataset.kind===kind;const okPlacement=placement==='all'||card.dataset.placement===placement;const okStatus=status==='all'||(status==='available'?card.dataset.status!=='missing':card.dataset.status===status);const okSearch=!q||(card.dataset.search||'').toLowerCase().includes(q);card.hidden=!(okKind&&okPlacement&&okStatus&&okSearch);});}buttons.forEach(btn=>btn.addEventListener('click',()=>{kind=btn.dataset.filterKind;placement=btn.dataset.filterPlacement;status=btn.dataset.filterStatus;buttons.forEach(b=>b.classList.toggle('is-active',b===btn));sync();}));search.addEventListener('input',sync);sync();",
     "</script>",
     "</body></html>"
   )

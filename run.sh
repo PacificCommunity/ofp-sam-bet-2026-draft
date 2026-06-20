@@ -215,6 +215,46 @@ copy_file <- function(from, to) {
   file.copy(from, to, overwrite = TRUE)
 }
 
+url_path <- function(path) {
+  gsub(" ", "%20", gsub("\\\\", "/", path))
+}
+
+copy_figure_with_sidecars <- function(file, folder) {
+  copied <- character()
+  copy_one <- function(from) {
+    if (!file.exists(from)) return()
+    to <- file.path(folder, basename(from))
+    copy_file(from, to)
+    copied <<- c(copied, to)
+  }
+  copy_one(file)
+  stem <- sub("[.][^.]+$", "", file)
+  for (ext in c(".webp", ".jpg", ".jpeg")) {
+    sidecar <- paste0(stem, ext)
+    if (!identical(normalizePath(sidecar, mustWork = FALSE), normalizePath(file, mustWork = FALSE))) {
+      copy_one(sidecar)
+    }
+  }
+  unique(copied)
+}
+
+rewrite_curation_review_links <- function(out, replacements) {
+  if (!is.data.frame(replacements) || !nrow(replacements)) return(invisible(FALSE))
+  html_files <- file.path(out, "curation", c("report-curation-review.html", "figure-curation-review.html"))
+  html_files <- html_files[file.exists(html_files)]
+  for (html_file in html_files) {
+    text <- readLines(html_file, warn = FALSE)
+    for (i in seq_len(nrow(replacements))) {
+      from <- replacements$from[[i]]
+      to <- replacements$to[[i]]
+      text <- gsub(from, to, text, fixed = TRUE)
+      text <- gsub(url_path(from), url_path(to), text, fixed = TRUE)
+    }
+    writeLines(text, html_file)
+  }
+  invisible(TRUE)
+}
+
 match_index_row <- function(index, file, id_col) {
   if (!is.data.frame(index) || !nrow(index)) return(index[0, , drop = FALSE])
   base <- basename(file)
@@ -270,6 +310,7 @@ figure_files <- if (dir.exists(figure_dir)) {
 } else {
   character()
 }
+review_replacements <- data.frame(from = character(), to = character(), stringsAsFactors = FALSE)
 for (file in figure_files) {
   row <- match_index_row(figure_index, file, "figure")
   id <- if (nrow(row) && "figure" %in% names(row) && nzchar(as.character(row$figure[[1]]))) {
@@ -278,9 +319,20 @@ for (file in figure_files) {
     slug(tools::file_path_sans_ext(basename(file)))
   }
   folder <- file.path(out, "figures", id)
-  copy_file(file, file.path(folder, basename(file)))
+  copied <- copy_figure_with_sidecars(file, folder)
+  if (length(copied)) {
+    review_replacements <- rbind(
+      review_replacements,
+      data.frame(
+        from = file.path("..", "Figures", "generated", basename(copied)),
+        to = file.path("..", "figures", id, basename(copied)),
+        stringsAsFactors = FALSE
+      )
+    )
+  }
   write_sidecar(folder, row, "caption")
 }
+rewrite_curation_review_links(out, review_replacements)
 
 table_dirs <- c(file.path(report_dir, "tables", "generated"), file.path(report_dir, "tables"), file.path(report_dir, "Tables"))
 table_files <- unlist(lapply(table_dirs[dir.exists(table_dirs)], function(dir) {
