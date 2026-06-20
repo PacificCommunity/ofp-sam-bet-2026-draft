@@ -1,0 +1,23 @@
+[
+  {
+    "stage": "report",
+    "generated_at_utc": "2026-06-20T20:40:22Z",
+    "report_job_id": "ded79b952bc7",
+    "report_input_job_ids": "d34c17021b7b",
+    "outputs_job_ids": "d34c17021b7b",
+    "outputs_bundle": "d34c17021b7b/outputs",
+    "generated_outputs_files": 223,
+    "figures_section": "seeded",
+    "tables_section": "seeded",
+    "kflow_lineage_job_ids": "4aeff84bab2b,d34c17021b7b",
+    "kflow_lineage_tasks": "ofp-sam-bet-2026-stepwise,ofp-sam-bet-2026-outputs",
+    "report_repo_commit": "3a53b04c01f5a681798d74295c8830ec031ac2c1",
+    "report_repo_remote": "https://github.com/PacificCommunity/ofp-sam-bet-2026-report.git",
+    "upstream_provenance_files": "kflow-provenance.json",
+    "copied_figures": 192,
+    "copied_tables": 2,
+    "figure_index_rows": 104,
+    "table_index_rows": 0,
+    "input_files": 224
+  }
+]

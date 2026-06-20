@@ -520,3 +520,4 @@ If this section file is deleted, the next report job will seed a fresh copy from
 
 <!-- figure: fishery-selectivity-weight -->
 ![Weight-based fishery selectivity. Curves show estimated selectivity by weight for selected fisheries; facets and legends identify fisheries and assessment models.](generated/outputs/figures/fishery-selectivity-weight.png){#fig-fishery-selectivity-weight fig-align="center" width=100%}
+
