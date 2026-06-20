@@ -2,6 +2,7 @@
 
 ![Report status: NOT FINAL draft scaffold](https://img.shields.io/badge/report%20status-NOT%20FINAL%20draft%20scaffold-d97706)
 ![Generated inputs: placeholders](https://img.shields.io/badge/generated%20inputs-placeholder%20figures%20%26%20captions-64748b)
+[![Kflow-ready](https://img.shields.io/badge/Kflow-ready-2563eb)](kflow.yaml)
 
 > [!WARNING]
 > **Draft scaffold, not the final 2026 assessment report.**
@@ -11,6 +12,10 @@
 > them as material to check, edit, replace, or remove before release. When the
 > assessment is finalized, update this badge and note to mark the repository as
 > the final report source.
+
+This repository is Kflow-ready: Kflow discovers and runs it from
+[`kflow.yaml`](kflow.yaml), then records upstream results jobs and generated
+report inputs in the report provenance files.
 
 This repository contains the BET 2026 report source in `bet-2026-report/`.
 The report is set up for automated insertion of

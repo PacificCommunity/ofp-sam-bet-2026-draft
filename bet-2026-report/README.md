@@ -2,6 +2,7 @@
 
 ![Report status: NOT FINAL draft scaffold](https://img.shields.io/badge/report%20status-NOT%20FINAL%20draft%20scaffold-d97706)
 ![Generated inputs: placeholders](https://img.shields.io/badge/generated%20inputs-placeholder%20figures%20%26%20captions-64748b)
+[![Kflow-ready](https://img.shields.io/badge/Kflow-ready-2563eb)](../kflow.yaml)
 
 > [!WARNING]
 > **Draft scaffold, not the final 2026 assessment report.**
@@ -11,6 +12,10 @@
 > them as material to check, edit, replace, or remove before release. When the
 > assessment is finalized, update this badge and note to mark the folder as the
 > final report source.
+
+This report folder is Kflow-ready through the repository
+[`kflow.yaml`](../kflow.yaml). Kflow supplies upstream results artifacts and
+records the task/job lineage in generated provenance files.
 
 Use `assessment-report.qmd` as the main Quarto document for the BET 2026
 assessment report. The folder contains the report configuration, assessment
