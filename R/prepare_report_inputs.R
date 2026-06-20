@@ -43,6 +43,14 @@ bind_rows_fill <- function(rows) {
   do.call(rbind, rows)
 }
 
+dedupe_index_rows <- function(x) {
+  if (!is.data.frame(x) || !nrow(x)) return(x)
+  key_cols <- intersect(c("figure", "table", "file", "relative_path", "label", "caption"), names(x))
+  if (!length(key_cols)) return(unique(x))
+  keys <- do.call(paste, c(lapply(x[key_cols], as.character), sep = "\r"))
+  x[!duplicated(keys), , drop = FALSE]
+}
+
 is_internal_report_table <- function(path) {
   base <- tolower(basename(path))
   grepl(
@@ -126,10 +134,10 @@ report_table_files <- setdiff(table_files, c(figure_index_files, table_index_fil
 report_table_files <- report_table_files[!is_internal_report_table(report_table_files)]
 copied_tables <- copy_unique(report_table_files, table_dest)
 
-figure_index <- bind_rows_fill(lapply(figure_index_files, read_csv_safe))
+figure_index <- dedupe_index_rows(bind_rows_fill(lapply(figure_index_files, read_csv_safe)))
 if (nrow(figure_index)) utils::write.csv(figure_index, file.path(figure_dest, "figure-index.csv"), row.names = FALSE)
 
-table_index <- bind_rows_fill(lapply(table_index_files, read_csv_safe))
+table_index <- dedupe_index_rows(bind_rows_fill(lapply(table_index_files, read_csv_safe)))
 if (nrow(table_index)) utils::write.csv(table_index, file.path(table_dest, "table-index.csv"), row.names = FALSE)
 
 summary_files <- table_files[grepl("summary[.]csv$|model-index[.]csv$|plot-summary[.]csv$|report-files[.]csv$", table_files, ignore.case = TRUE)]
