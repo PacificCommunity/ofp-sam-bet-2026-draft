@@ -1,7 +1,10 @@
 {
-  "generated_at": "2026-06-20T21:47:35.725372+00:00",
+  "generated_at": "2026-06-20T22:02:52.482531+00:00",
   "input_selectors": [
-    "9ac639fad80d"
+    {
+      "latest": 1,
+      "report": "ofp-sam-bet-2026-results"
+    }
   ],
   "inputs": [
     {
@@ -35,18 +38,18 @@
     "branch": "main",
     "cluster_id": "",
     "completed_at": "",
-    "created_at": "2026-06-20T21:47:35.720362+00:00",
+    "created_at": "2026-06-20T22:02:52.443506+00:00",
     "git_commit_message": "",
     "git_commit_sha": "",
     "git_commit_url": "",
-    "job_id": "4f5848ae78a1",
-    "job_key": "report",
-    "job_label": "Job 249",
-    "job_number": 249,
-    "job_title": "BET report",
+    "job_id": "0ad9999d8227",
+    "job_key": "report-provenance-smoke",
+    "job_label": "Job 250",
+    "job_number": 250,
+    "job_title": "BET report provenance smoke",
     "owner_login": "kyuhank",
     "proc_id": "",
-    "remote_dir": "/home/kyuhank/KflowOutput/ofp-sam-bet-2026-report/job-000249",
+    "remote_dir": "/home/kyuhank/KflowOutput/ofp-sam-bet-2026-report/job-000250",
     "remote_host": "nouofpsubmit.corp.spc.int",
     "remote_user": "kyuhank",
     "repo": "PacificCommunity/ofp-sam-bet-2026-report",
