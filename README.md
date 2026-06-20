@@ -88,7 +88,8 @@ These fields are the useful ones to change from Kflow:
 | `RESULTS_JOB_ID` | `245` | Use one specific results job artifact. |
 | `RESULTS_JOB_IDS` | `245,250` | Use multiple results jobs when combining model sets. |
 | `REPORT_QMD` | `assessment-report.qmd` | Quarto entrypoint inside `bet-2026-report/`. |
-| `REPORT_FILE_STEM` | `bet-2026-report` | HTML/PDF output filename stem. |
+| `REPORT_FILE_STEM` | `bet-2026-report` | Report output filename stem. |
+| `REPORT_RENDER_HTML` | `false` | Also render/copy the final HTML report. The default keeps Kflow report artifacts PDF-only to save space. |
 | `FLOW_GROUP` | `bet-2026-base` | Short label shared by the chain in Kflow. |
 | `JOB_TITLE` | `BET report` | Human title shown in Kflow. |
 | `FLOW_SPECIES` | `BET` | Species code written into `report-config.yml`. |

@@ -22,6 +22,7 @@ env:
   REPORT_DIR: bet-2026-report
   REPORT_QMD: assessment-report.qmd
   REPORT_FILE_STEM: bet-2026-report
+  REPORT_RENDER_HTML: "false"
   FLOW_SPECIES: BET
   FLOW_SPECIES_LABEL: bigeye tuna
   FLOW_ASSESSMENT_YEAR: "2026"
@@ -47,6 +48,7 @@ job_config:
     - REPORT_DIR
     - REPORT_QMD
     - REPORT_FILE_STEM
+    - REPORT_RENDER_HTML
     - FLOW_SPECIES
     - FLOW_SPECIES_LABEL
     - FLOW_ASSESSMENT_YEAR

@@ -486,12 +486,18 @@ echo "Input artifacts: ${INPUT_DIR}"
 echo "Report directory: ${REPORT_DIR}"
 echo "Report entrypoint: ${REPORT_QMD}"
 echo "Report file stem: ${REPORT_FILE_STEM}"
+echo "Render HTML: ${REPORT_RENDER_HTML:-false}"
 
 prepare_runtime_packages
 Rscript R/prepare_report_inputs.R
 
 cd "${REPORT_DIR}"
-quarto render "${REPORT_QMD}" --to html --output "${REPORT_FILE_STEM}.html"
+rm -f "${REPORT_FILE_STEM}.html" "${REPORT_FILE_STEM}.pdf"
+if truthy_env REPORT_RENDER_HTML false; then
+  quarto render "${REPORT_QMD}" --to html --output "${REPORT_FILE_STEM}.html"
+else
+  echo "Skipping HTML report render; set REPORT_RENDER_HTML=true to enable it."
+fi
 quarto render "${REPORT_QMD}" --to pdf --output "${REPORT_FILE_STEM}.pdf"
 cd "${ROOT}"
 
@@ -500,6 +506,12 @@ env <- function(name, default = "") {
   value <- Sys.getenv(name, unset = NA_character_)
   if (is.na(value) || !nzchar(value)) default else value
 }
+
+truthy <- function(value) {
+  tolower(trimws(as.character(value %||% ""))) %in% c("1", "true", "yes", "y", "on", "always")
+}
+
+`%||%` <- function(x, y) if (is.null(x) || length(x) == 0 || (length(x) == 1 && is.na(x))) y else x
 
 slug <- function(x) {
   x <- tolower(trimws(as.character(x)))
@@ -633,13 +645,15 @@ match_index_row <- function(index, file, id_col) {
 out <- env("OUTPUT_DIR", "outputs")
 report_dir <- env("REPORT_DIR", "bet-2026-report")
 report_file_stem <- env("REPORT_FILE_STEM", "bet-2026-report")
+render_html <- truthy(env("REPORT_RENDER_HTML", "false"))
 
 dirs <- file.path(out, c("final-report", "figures", "tables", "indices", "provenance", "generated"))
 unlink(dirs, recursive = TRUE, force = TRUE)
 dir.create(out, recursive = TRUE, showWarnings = FALSE)
 invisible(lapply(dirs, dir.create, recursive = TRUE, showWarnings = FALSE))
 
-final_files <- file.path(report_dir, paste0(report_file_stem, c(".pdf", ".html")))
+final_ext <- if (render_html) c(".pdf", ".html") else ".pdf"
+final_files <- file.path(report_dir, paste0(report_file_stem, final_ext))
 final_files <- final_files[file.exists(final_files)]
 for (file in final_files) {
   copy_file(file, file.path(out, "final-report", basename(file)))
