@@ -5,74 +5,58 @@
 </p>
 
 ![Report status: NOT FINAL draft scaffold](https://img.shields.io/badge/report%20status-NOT%20FINAL%20draft%20scaffold-d97706)
-![Generated inputs: placeholders](https://img.shields.io/badge/generated%20inputs-placeholder%20figures%20%26%20captions-64748b)
 
 > [!WARNING]
 > **Draft scaffold, not the final 2026 assessment report.**
-> This folder is not yet the final assessment report. Many figures, tables,
-> captions, and narrative blocks
-> are generated placeholders or review seeds from the current workflow. Treat
-> them as material to check, edit, replace, or remove before release. When the
-> assessment is finalized, update this badge and note to mark the folder as the
-> final report source.
+> Treat generated figures, captions, tables, and result text as review material
+> until the assessment is finalized.
 
-This report folder is Kflow-ready through the repository
-[`kflow.yaml`](../kflow.yaml). Kflow supplies upstream results artifacts and
-records the task/job lineage in generated provenance files.
+This folder is the Quarto report source. Use `assessment-report.qmd` as the main
+entrypoint.
 
-Use `assessment-report.qmd` as the main Quarto document for the BET 2026
-assessment report. The folder contains the report configuration, assessment
-narrative, references, generated-output staging area, and helper code.
+## Edit First
 
-Edit these first as 2026 results become available:
+- `sections/*.qmd`: report text, figure/table placement, captions, and appendix
+  material.
+- `report-config.yml`: species/year metadata, authors, meeting details,
+  bibliography settings, and draft watermark.
+- `catalog/curation.yml`: small overrides for generated figures and tables.
+- `references.bib`: citations.
 
-- `sections/*.qmd`: assessment narrative and the generated figure/table sections.
-- `report-config.yml`: species/year metadata, authors, meeting metadata,
-  bibliography, and draft-watermark settings.
-- `references.bib`: report references for the BET assessment.
+Avoid putting BET-specific narrative in `assessment-report.qmd` or
+`report-body.qmd`; keep those files reusable.
 
-The workflow-generated output bundle is copied into:
+## Generated Inputs
+
+Kflow copies results artifacts into:
 
 ```text
 generated/outputs/
+pipeline-inputs/
 ```
 
-In Kflow, the report job also commits and pushes the generated QMD plus the
-figure/table files referenced by that QMD back to this repository, together with
-`pipeline-inputs/` and the seeded `sections/Figures.qmd` and
-`sections/Tables.qmd` when they change. Review HTML and diagnostics stay in
-Kflow artifacts. That means a fresh checkout can be rendered locally without
-needing Kflow artifacts.
-
-The files that usually need human editing are:
+The key review map is:
 
 ```text
-sections/Figures.qmd
-sections/Tables.qmd
+generated/outputs/report-ready/report-map.html
 ```
 
-If either section is missing, or still contains the initial
-`kflow-section-seed` placeholder, the next report render seeds it from:
+If `sections/Figures.qmd` or `sections/Tables.qmd` is missing, or still contains
+the initial `kflow-section-seed` placeholder, the next report run seeds it from:
 
 ```text
 generated/outputs/report-ready/figures.qmd
 generated/outputs/report-ready/tables.qmd
 ```
 
-After a section has been seeded, edit it directly to remove blocks, reorder
-figures or tables, move appendix material, or rewrite captions. Later renders
-preserve existing section files.
+After that, edit the section files directly. Later Kflow runs preserve existing
+manual sections.
 
-Open the generated map when deciding what to edit:
+## Render
 
-```text
-generated/outputs/report-ready/report-map.html
+```bash
+quarto render assessment-report.qmd --to pdf
 ```
 
-Draft protection is on by default through `draft_watermark` and
-`watermark_text` in `report-config.yml`. Keep it enabled until the report is
+Keep the draft watermark enabled in `report-config.yml` until the report is
 approved for wider release.
-
-Avoid putting BET-specific text in `assessment-report.qmd` or
-`report-body.qmd`; those files are intended to stay reusable. Use `sections/`,
-`report-config.yml`, and `references.bib` for report edits.
