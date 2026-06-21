@@ -1,8 +1,11 @@
 # BET 2026 Assessment Report
 
+<p align="right">
+  <a href="kflow.yaml"><img src="kflow-ready.svg" alt="Kflow ready task"></a>
+</p>
+
 ![Report status: NOT FINAL draft scaffold](https://img.shields.io/badge/report%20status-NOT%20FINAL%20draft%20scaffold-d97706)
 ![Generated inputs: placeholders](https://img.shields.io/badge/generated%20inputs-placeholder%20figures%20%26%20captions-64748b)
-[![Kflow ready task](kflow-ready.svg)](kflow.yaml)
 
 > [!WARNING]
 > **Draft scaffold, not the final 2026 assessment report.**
