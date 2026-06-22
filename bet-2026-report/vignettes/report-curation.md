@@ -38,9 +38,11 @@ bet-2026-report/sections/Figures.qmd
 bet-2026-report/sections/Tables.qmd
 ```
 
-If a section file is missing, or still has the initial `kflow-section-seed`
-placeholder, the report job seeds it from the generated QMD. If the section file
-already exists without that placeholder, the report job preserves it.
+If a section file is missing, or looks like a generated BET results section, the
+report job seeds it from the latest generated QMD. This keeps fishery labels and
+figure filenames aligned with the selected results job. Set
+`KFLOW_REPORT_RESEED_GENERATED_SECTIONS=false` only when deliberately preserving
+manually curated figure/table sections across runs.
 
 The Kflow report job then commits and pushes the generated report inputs back to
 the report repository. The commit includes the generated figure/table QMD, the
@@ -57,7 +59,8 @@ are not used by the report.
 3. Run report once to seed `sections/Figures.qmd` and `sections/Tables.qmd`.
 4. Edit those two section files directly.
 5. Commit the edited report repo.
-6. Rerun report. The edited sections are kept, while the generated staging area
+6. Rerun report with `KFLOW_REPORT_RESEED_GENERATED_SECTIONS=false` when the
+   edited sections should be kept, while the generated staging area
    is refreshed and committed by the report job.
 
 To remove a figure or table, delete its block in the section QMD. To change

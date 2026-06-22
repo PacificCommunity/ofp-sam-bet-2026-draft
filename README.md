@@ -64,8 +64,10 @@ bet-2026-report/pipeline-inputs/
 ```
 
 Open `report-map.html` first when deciding which generated figures or tables to
-keep. Then edit `sections/Figures.qmd` and `sections/Tables.qmd`; later Kflow
-runs preserve those manual edits.
+keep. Generated `sections/Figures.qmd` and `sections/Tables.qmd` are reseeded
+from the latest results by default so stale fishery labels cannot point at
+missing files. Set `KFLOW_REPORT_RESEED_GENERATED_SECTIONS=false` only when
+deliberately preserving manually curated figure/table sections across runs.
 
 Large review HTML and diagnostics stay in Kflow artifacts. This repo keeps only
 the files needed to render the report as a standalone checkout.
