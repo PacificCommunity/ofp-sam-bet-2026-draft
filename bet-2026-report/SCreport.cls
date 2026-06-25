@@ -18,8 +18,8 @@
   \RequirePackage{soul}
 }{%
   \newcommand{\sethlcolor}[1]{}
-  \newcommand{\hl}[1]{#1}
-  \newcommand{\st}[1]{#1}
+  \newcommand{\hl}[1]{##1}
+  \newcommand{\st}[1]{##1}
 }
 \IfFileExists{tocloft.sty}{%
   \RequirePackage{tocloft}
