@@ -14,8 +14,18 @@
 
 % 2.1 Packages
 \RequirePackage{setspace}
-\RequirePackage{soul}
-\RequirePackage{tocloft}
+\IfFileExists{soul.sty}{%
+  \RequirePackage{soul}
+}{%
+  \newcommand{\sethlcolor}[1]{}
+  \newcommand{\hl}[1]{#1}
+  \newcommand{\st}[1]{#1}
+}
+\IfFileExists{tocloft.sty}{%
+  \RequirePackage{tocloft}
+}{%
+  \newlength{\cftbeforesecskip}
+}
 \RequirePackage{fvextra}
 \RequirePackage[usenames,dvipsnames,svgnames]{xcolor}
 \RequirePackage{xspace}
