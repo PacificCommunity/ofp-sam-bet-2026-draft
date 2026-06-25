@@ -254,6 +254,27 @@ seed_report_section <- function(report_path, name, source) {
   status
 }
 
+stabilize_pdf_figure_section <- function(path, every = 8L) {
+  if (!file.exists(path)) return(FALSE)
+  lines <- readLines(path, warn = FALSE)
+  marker <- "<!-- kflow-pdf-float-barriers -->"
+  if (any(grepl(marker, lines, fixed = TRUE))) return(FALSE)
+
+  out <- marker
+  figure_count <- 0L
+  for (line in lines) {
+    out <- c(out, line)
+    if (grepl("^!\\[", line) && grepl("\\{#fig-", line)) {
+      figure_count <- figure_count + 1L
+      if (figure_count %% every == 0L) {
+        out <- c(out, "", "```{=latex}", "\\FloatBarrier", "```", "")
+      }
+    }
+  }
+  writeLines(out, path)
+  TRUE
+}
+
 read_kflow_provenance <- function(path) {
   if (!file.exists(path) || !requireNamespace("jsonlite", quietly = TRUE)) return(list())
   tryCatch(jsonlite::fromJSON(path, simplifyDataFrame = TRUE), error = function(e) list())
@@ -380,6 +401,11 @@ figures_section_status <- seed_report_section(
   "Figures",
   file.path(generated_outputs_dest, "report-ready", "figures.qmd")
 )
+if (figures_section_status %in% c("seeded", "reseeded")) {
+  if (stabilize_pdf_figure_section(file.path(report_path, "sections", "Figures.qmd"))) {
+    figures_section_status <- paste0(figures_section_status, "+pdf-float-barriers")
+  }
+}
 tables_section_status <- seed_report_section(
   report_path,
   "Tables",
