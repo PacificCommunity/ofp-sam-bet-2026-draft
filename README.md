@@ -14,7 +14,7 @@
 
 This repository contains the Quarto source for the BET 2026 report. It is
 designed to work in Kflow, but the report folder can also be rendered locally
-after generated inputs have been committed.
+after generated inputs are available.
 
 ## Workflow
 
@@ -34,8 +34,8 @@ The report task:
 - seeds `sections/Figures.qmd` and `sections/Tables.qmd` only when those files
   are missing or still contain the initial placeholder;
 - records Kflow lineage in `outputs/provenance/`;
-- commits the report-ready generated inputs back to this repo when publishing is
-  enabled.
+- optionally commits the report-ready generated inputs back to this repo when
+  publishing is enabled.
 
 ## Edit Here
 
@@ -109,5 +109,6 @@ quarto render assessment-report.qmd --to pdf
 | `REPORT_QMD` | `assessment-report.qmd` | Quarto entrypoint inside `bet-2026-report/`. |
 | `REPORT_FILE_STEM` | `bet-2026-report` | Output filename stem. |
 | `REPORT_RENDER_HTML` | `false` | Also render the final HTML report. PDF-only is the default to save space. |
-| `KFLOW_REPORT_COMMIT_GENERATED` | `true` | Commit generated report inputs after a successful run. |
-| `KFLOW_REPORT_PUSH_GENERATED` | `true` | Push that generated-input commit. |
+| `KFLOW_REPORT_COMMIT_GENERATED` | `false` | Commit generated report inputs after a successful run. Off by default because Kflow artifacts already carry them. |
+| `KFLOW_REPORT_PUSH_GENERATED` | `false` | Push that generated-input commit when committing is enabled. |
+| `KFLOW_REPORT_PUBLISH_REQUIRED` | `false` | Fail the report only when rendering fails, not when generated-input publishing is unavailable. |
