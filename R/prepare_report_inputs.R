@@ -279,13 +279,15 @@ stabilize_pdf_figure_section <- function(path, every = 1L) {
   lines <- readLines(path, warn = FALSE)
   marker <- "<!-- kflow-pdf-float-barriers -->"
   break_lines <- c("\\FloatBarrier", "\\clearpage")
+  vspace_line <- "\\vspace*{0.04\\textheight}"
+  generated_layout_lines <- c(break_lines, vspace_line)
   latex_break_block_end <- function(index) {
     if (!identical(trimws(lines[[index]]), "```{=latex}")) return(NA_integer_)
     closing <- which(seq_along(lines) > index & trimws(lines) == "```")
     if (!length(closing)) return(NA_integer_)
     end <- closing[[1L]]
     body <- if (end > index + 1L) trimws(lines[seq.int(index + 1L, end - 1L)]) else character()
-    if (!length(body) || all(body %in% c("", break_lines))) end else NA_integer_
+    if (!length(body) || all(body %in% c("", generated_layout_lines))) end else NA_integer_
   }
 
   out <- c(marker, "", "\\clearpage", "")
@@ -301,9 +303,12 @@ stabilize_pdf_figure_section <- function(path, every = 1L) {
       i <- block_end + 1L
       next
     }
-    if (trimws(line) %in% break_lines) {
+    if (trimws(line) %in% generated_layout_lines) {
       i <- i + 1L
       next
+    }
+    if (grepl("^!\\[", line) && grepl("\\{#fig-", line)) {
+      out <- c(out, "", vspace_line, "")
     }
     out <- c(out, line)
     if (grepl("^!\\[", line) && grepl("\\{#fig-", line)) {
