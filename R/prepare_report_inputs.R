@@ -321,6 +321,37 @@ stabilize_pdf_figure_section <- function(path, every = 1L) {
   TRUE
 }
 
+stabilize_quarto_pipe_labels <- function(path) {
+  if (!file.exists(path)) return(FALSE)
+  lines <- readLines(path, warn = FALSE)
+  out <- lines
+  i <- 1L
+  while (i <= length(lines)) {
+    line <- lines[[i]]
+    header <- regexec("^(```\\{r)\\s+([^,}\\s]+)(\\s*(?:,.*)?\\})$", line, perl = TRUE)
+    match <- regmatches(line, header)[[1]]
+    if (!length(match)) {
+      i <- i + 1L
+      next
+    }
+    closing <- which(seq_along(lines) > i & trimws(lines) == "```")
+    if (!length(closing)) {
+      i <- i + 1L
+      next
+    }
+    end <- closing[[1L]]
+    body <- if (end > i + 1L) lines[seq.int(i + 1L, end - 1L)] else character()
+    if (any(grepl("^#\\|\\s*label\\s*:", body))) {
+      suffix <- match[[4]]
+      out[[i]] <- if (identical(trimws(suffix), "}")) paste0(match[[2]], "}") else paste0(match[[2]], suffix)
+    }
+    i <- end + 1L
+  }
+  if (identical(lines, out)) return(FALSE)
+  writeLines(out, path)
+  TRUE
+}
+
 read_kflow_provenance <- function(path) {
   if (!file.exists(path) || !requireNamespace("jsonlite", quietly = TRUE)) return(list())
   tryCatch(jsonlite::fromJSON(path, simplifyDataFrame = TRUE), error = function(e) list())
@@ -438,6 +469,7 @@ if (!length(all_files)) warning("No Kflow input artifact files found at ", input
 
 results_bundle <- find_results_bundle(input_root)
 copied_generated_outputs <- copy_report_generated_outputs(results_bundle, generated_outputs_dest)
+stabilize_quarto_pipe_labels(file.path(generated_outputs_dest, "report-ready", "tables.qmd"))
 figures_section_status <- seed_report_section(
   report_path,
   "Figures",
@@ -453,6 +485,9 @@ tables_section_status <- seed_report_section(
   "Tables",
   file.path(generated_outputs_dest, "report-ready", "tables.qmd")
 )
+if (stabilize_quarto_pipe_labels(file.path(report_path, "sections", "Tables.qmd"))) {
+  tables_section_status <- paste0(tables_section_status, "+pipe-labels")
+}
 
 figure_files <- all_files[grepl("[.](png|jpg|jpeg|webp|pdf)$", all_files, ignore.case = TRUE)]
 table_files <- all_files[grepl("[.]csv$", all_files, ignore.case = TRUE)]
