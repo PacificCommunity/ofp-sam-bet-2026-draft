@@ -9,6 +9,7 @@ format:
     documentclass: SCreport
     fontsize: 11pt
     geometry:
+      - a4paper
       - margin=1in
     toc: true
     number-sections: true
